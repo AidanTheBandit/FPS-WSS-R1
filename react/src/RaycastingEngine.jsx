@@ -199,33 +199,23 @@ const RaycastingEngine = () => {
         <canvas ref={canvasRef} className="game-canvas" />
 
         {/* Multiplayer HUD */}
-        <div className="multiplayer-hud" style={{ display: 'block', visibility: 'visible' }}>
+        <div className="multiplayer-hud">
           <div className={`connection-status ${gameState.isConnected ? 'connected' : 'disconnected'}`}>
-            {gameState.isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+            {gameState.isConnected ? '🟢 Online' : '🔴 Offline'}
           </div>
           <div className="player-count">
-            Players: {gameState.connectedPlayers || 0}
-          </div>
-          {gameState.playerId && (
-            <div className="player-id">
-              ID: {gameState.playerId.substring(0, 8)}
-            </div>
-          )}
-          {/* Debug info */}
-          <div style={{ fontSize: '10px', color: 'yellow', background: 'rgba(0,0,0,0.8)', padding: '2px', marginTop: '5px' }}>
-            Debug: {JSON.stringify({ connected: gameState.isConnected, players: gameState.connectedPlayers, id: gameState.playerId })}
+            Players: {gameState.connectedPlayers || 1}
           </div>
         </div>
 
         {/* Game Stats HUD */}
+        {/* Game Stats HUD */}
         <div className="game-hud">
-          <div className="health">Health: {gameState.health}</div>
-          <div className="ammo">Ammo: {gameState.ammo}</div>
-          <div className="score">Score: {gameState.score}</div>
-          <div className="level">Level: {gameState.level}</div>
-        </div>
-
-        <div className="touch-controls">
+          <div className="health">❤️ {gameState.health}</div>
+          <div className="ammo">🔫 {gameState.ammo}</div>
+          <div className="score">⭐ {gameState.score}</div>
+          <div className="level">🏁 {gameState.level}</div>
+        </div>        <div className="touch-controls">
           {/* Virtual Joystick */}
           <div className="joystick-container">
             <div

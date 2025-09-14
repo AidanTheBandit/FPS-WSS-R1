@@ -45,13 +45,33 @@ const MAP = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 ];
 
-function isValidPosition(x, y) {
-  const mapX = Math.floor(x);
-  const mapY = Math.floor(y);
-  if (mapX < 0 || mapX >= MAP[0].length || mapY < 0 || mapY >= MAP.length) {
-    return false;
+function castRay(originX, originY, angle, maxDepth = 20) {
+  if (!MAP || !Array.isArray(MAP) || MAP.length === 0 || !Array.isArray(MAP[0])) {
+    return maxDepth;
   }
-  return MAP[mapY][mapX] === 0;
+
+  const sin = Math.sin(angle);
+  const cos = Math.cos(angle);
+  let x = originX;
+  let y = originY;
+  const mapWidth = MAP[0].length;
+  const mapHeight = MAP.length;
+
+  for (let depth = 0; depth < maxDepth; depth += 0.1) {
+    const testX = Math.floor(x);
+    const testY = Math.floor(y);
+
+    if (testX < 0 || testX >= mapWidth ||
+        testY < 0 || testY >= mapHeight ||
+        MAP[testY][testX] === 1) {
+      return depth;
+    }
+
+    x += cos * 0.1;
+    y += sin * 0.1;
+  }
+
+  return maxDepth;
 }
 
 function generatePlayerId() {
@@ -125,7 +145,7 @@ io.on('connection', (socket) => {
     const shooterX = player.x;
     const shooterY = player.y;
 
-    // Simple hit detection (can be improved)
+    // Check for hits on other players with line of sight
     players.forEach((targetPlayer, targetId) => {
       if (targetId === socket.id || !targetPlayer.connected) return;
 
@@ -139,26 +159,31 @@ io.on('connection', (socket) => {
         const normalizedAngleDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
 
         if (normalizedAngleDiff <= Math.PI / 6) { // 30 degree cone
-          // Hit!
-          console.log(`Player ${socket.id} hit ${targetId}`);
-          targetPlayer.health -= GAME_CONSTANTS.SHOOT_DAMAGE;
-          player.score += 100;
+          // Check line of sight - cast ray to target position
+          const rayDistance = castRay(shooterX, shooterY, angleToTarget);
 
-          // Broadcast hit
-          io.emit('playerHit', {
-            shooterId: socket.id,
-            targetId: targetId,
-            damage: GAME_CONSTANTS.SHOOT_DAMAGE,
-            newHealth: targetPlayer.health
-          });
+          if (rayDistance >= distance) {
+            // Hit! No wall blocking the shot
+            console.log(`Player ${socket.id} hit ${targetId}`);
+            targetPlayer.health -= GAME_CONSTANTS.SHOOT_DAMAGE;
+            player.score += 100;
 
-          // Check if player died
-          if (targetPlayer.health <= 0) {
-            targetPlayer.health = 0;
-            io.emit('playerDied', {
-              playerId: targetId,
-              killerId: socket.id
+            // Broadcast hit
+            io.emit('playerHit', {
+              shooterId: socket.id,
+              targetId: targetId,
+              damage: GAME_CONSTANTS.SHOOT_DAMAGE,
+              newHealth: targetPlayer.health
             });
+
+            // Check if player died
+            if (targetPlayer.health <= 0) {
+              targetPlayer.health = 0;
+              io.emit('playerDied', {
+                playerId: targetId,
+                killerId: socket.id
+              });
+            }
           }
         }
       }
