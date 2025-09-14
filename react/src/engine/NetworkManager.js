@@ -109,6 +109,10 @@ export class NetworkManager {
       this.handleAmmoPickupExpired(pickupId);
     });
 
+    this.socket.on('playerBullet', (bulletData) => {
+      this.handlePlayerBullet(bulletData);
+    });
+
     this.socket.on('playerBullet', (data) => {
       this.handlePlayerBullet(data);
     });
@@ -261,7 +265,7 @@ export class NetworkManager {
     if (this.gameEngine.bullets) {
       // Only add if it's not from the local player (local bullets are handled locally)
       if (bulletData.playerId !== this.localPlayerId) {
-        const bulletSpeed = 1.0;
+        const bulletSpeed = 2.0; // Match local bullet speed
         const bullet = {
           x: bulletData.x,
           y: bulletData.y,

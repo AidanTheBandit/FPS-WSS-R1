@@ -143,7 +143,7 @@ export class GameEngine {
         const dy = bullet.y - enemy.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < 0.5) { // Bullet hit radius
+        if (distance < 0.8) { // Increased bullet hit radius
           enemy.takeDamage(GAME_CONSTANTS.SHOOT_DAMAGE);
           this.bullets.splice(i, 1);
           break;
@@ -194,7 +194,7 @@ export class GameEngine {
       this.renderer.triggerMuzzleFlash();
 
       // Create bullet for visual feedback
-      const bulletSpeed = 1.0; // Units per frame at 60fps
+      const bulletSpeed = 2.0; // Increased bullet speed for better visibility
       const bullet = {
         x: this.player.x,
         y: this.player.y,
