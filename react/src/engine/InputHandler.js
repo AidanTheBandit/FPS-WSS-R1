@@ -68,29 +68,30 @@ export class InputHandler {
   handleKeyboardInput(deltaTime) {
     const moveSpeed = GAME_CONSTANTS.MOVE_SPEED;
     const turnSpeed = GAME_CONSTANTS.TURN_SPEED;
+    const dt = deltaTime / 16.67; // Normalize to ~60fps
 
     // Movement - W/S for forward/backward relative to facing direction
     if (this.keys.w || this.keys.ArrowUp) {
-      this.movePlayerRelative(0, moveSpeed); // Forward
+      this.movePlayerRelative(0, moveSpeed * dt); // Forward
     }
     if (this.keys.s || this.keys.ArrowDown) {
-      this.movePlayerRelative(0, -moveSpeed); // Backward
+      this.movePlayerRelative(0, -moveSpeed * dt); // Backward
     }
 
     // Camera turning - A/D for left/right camera rotation
     if (this.keys.a || this.keys.ArrowLeft) {
-      this.gameEngine.player.rotate(-turnSpeed); // Turn left
+      this.gameEngine.player.rotate(-turnSpeed * dt); // Turn left
     }
     if (this.keys.d || this.keys.ArrowRight) {
-      this.gameEngine.player.rotate(turnSpeed); // Turn right
+      this.gameEngine.player.rotate(turnSpeed * dt); // Turn right
     }
 
     // Strafing - Q/E for left/right movement (used in strafe mode)
     if (this.keys.q) {
-      this.movePlayerRelative(-moveSpeed, 0); // Strafe left
+      this.movePlayerRelative(-moveSpeed * dt, 0); // Strafe left
     }
     if (this.keys.e) {
-      this.movePlayerRelative(moveSpeed, 0); // Strafe right
+      this.movePlayerRelative(moveSpeed * dt, 0); // Strafe right
     }
 
     // Shooting - Spacebar
@@ -116,15 +117,16 @@ export class InputHandler {
     const deadzone = 0.2;
     const moveSpeed = GAME_CONSTANTS.MOVE_SPEED;
     const turnSpeed = GAME_CONSTANTS.TURN_SPEED;
+    const dt = deltaTime / 16.67; // Normalize to ~60fps
 
     // Direct movement based on joystick position
     if (Math.abs(y) > deadzone) {
       if (y > 0) {
         // Forward movement - use same logic as W key
-        this.movePlayerRelative(0, moveSpeed);
+        this.movePlayerRelative(0, moveSpeed * dt);
       } else {
         // Backward movement - use same logic as S key  
-        this.movePlayerRelative(0, -moveSpeed);
+        this.movePlayerRelative(0, -moveSpeed * dt);
       }
     }
 
@@ -133,17 +135,17 @@ export class InputHandler {
         // Strafe mode
         if (x < 0) {
           // Strafe left - use same logic as Q key
-          this.movePlayerRelative(-moveSpeed, 0);
+          this.movePlayerRelative(-moveSpeed * dt, 0);
         } else {
           // Strafe right - use same logic as E key
-          this.movePlayerRelative(moveSpeed, 0);
+          this.movePlayerRelative(moveSpeed * dt, 0);
         }
       } else {
         // Normal mode - turn camera
         if (x < 0) {
-          this.gameEngine.player.rotate(-turnSpeed);
+          this.gameEngine.player.rotate(-turnSpeed * dt);
         } else {
-          this.gameEngine.player.rotate(turnSpeed);
+          this.gameEngine.player.rotate(turnSpeed * dt);
         }
       }
     }
