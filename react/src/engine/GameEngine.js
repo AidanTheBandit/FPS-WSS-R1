@@ -114,6 +114,11 @@ export class GameEngine {
     this.gameStateManager.updateHealth(this.player.health);
     this.gameStateManager.updateAmmo(this.player.ammo);
     this.gameStateManager.updateScore(this.score);
+
+    // Check if player is dead and set game over state
+    if (this.player.health <= 0 && this.gameState === 'playing') {
+      this.gameState = 'gameOver';
+    }
   }
 
   updateBullets(deltaTime) {
