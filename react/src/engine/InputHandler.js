@@ -65,10 +65,10 @@ export class InputHandler {
     if (this.keys.s || this.keys.ArrowDown || this.touchState.moveBackward) {
       this.movePlayer(0, moveSpeed);
     }
-    if ((this.keys.a || this.touchState.strafe) && !this.keys.Shift) {
+    if (this.keys.a || this.touchState.strafe) {
       this.movePlayer(-moveSpeed, 0);
     }
-    if ((this.keys.d || this.touchState.strafe) && !this.keys.Shift) {
+    if (this.keys.d) {
       this.movePlayer(moveSpeed, 0);
     }
 
