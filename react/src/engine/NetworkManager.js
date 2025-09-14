@@ -112,14 +112,6 @@ export class NetworkManager {
     this.socket.on('playerBullet', (bulletData) => {
       this.handlePlayerBullet(bulletData);
     });
-
-    this.socket.on('playerBullet', (data) => {
-      this.handlePlayerBullet(data);
-    });
-
-    this.socket.on('playerBullet', (bulletData) => {
-      this.handlePlayerBullet(bulletData);
-    });
   }
 
   disconnect() {
@@ -272,7 +264,12 @@ export class NetworkManager {
           velocityX: Math.cos(bulletData.angle) * bulletSpeed,
           velocityY: Math.sin(bulletData.angle) * bulletSpeed,
           lifetime: 2000,
-          playerId: bulletData.playerId
+          playerId: bulletData.playerId,
+          trail: [], // Initialize trail array
+          gravity: 0.001,
+          airResistance: 0.998,
+          maxDistance: 15,
+          distanceTraveled: 0
         };
         this.gameEngine.bullets.push(bullet);
       }
@@ -305,7 +302,7 @@ export class NetworkManager {
 
   getRemotePlayers() {
     const remotePlayers = Array.from(this.players.values()).filter(player => player.connected);
-    console.log(`Remote players: ${remotePlayers.length}`, remotePlayers);
+    // Remove repetitive logging - only log when count changes
     return remotePlayers;
   }
 

@@ -288,6 +288,9 @@ export class GameEngine {
       bullet.distanceTraveled += distanceThisFrame;
 
       // Add to trail for visual effect (keep last 5 positions)
+      if (!bullet.trail) {
+        bullet.trail = [];
+      }
       bullet.trail.push({ x: prevX, y: prevY });
       if (bullet.trail.length > 5) {
         bullet.trail.shift();
