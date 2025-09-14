@@ -193,22 +193,24 @@ export class GameEngine {
     if (this.player.shoot() && this.gameState === 'playing') {
       this.renderer.triggerMuzzleFlash();
 
-      // In multiplayer, server handles all shooting logic
+      // Create bullet for visual feedback
+      const bulletSpeed = 1.0; // Units per frame at 60fps
+      const bullet = {
+        x: this.player.x,
+        y: this.player.y,
+        velocityX: Math.cos(this.player.angle) * bulletSpeed,
+        velocityY: Math.sin(this.player.angle) * bulletSpeed,
+        lifetime: 2000, // 2 seconds
+        playerId: 'local' // For identification
+      };
+
+      this.bullets.push(bullet);
+
+      // Send shoot event to server for multiplayer logic
       if (this.networkManager.isConnected()) {
         this.networkManager.sendPlayerShoot(this.player.angle);
       } else {
-        // Single-player mode: create local bullets
-        const bulletSpeed = 1.0; // Units per frame at 60fps
-        const bullet = {
-          x: this.player.x,
-          y: this.player.y,
-          velocityX: Math.cos(this.player.angle) * bulletSpeed,
-          velocityY: Math.sin(this.player.angle) * bulletSpeed,
-          lifetime: 2000, // 2 seconds
-          playerId: 'local' // For identification
-        };
-
-        this.bullets.push(bullet);
+        // Single-player mode: handle local shooting
         this.handleLocalShoot();
       }
     }
