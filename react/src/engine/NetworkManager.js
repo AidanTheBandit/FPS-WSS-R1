@@ -109,6 +109,10 @@ export class NetworkManager {
       this.handleAmmoPickupExpired(pickupId);
     });
 
+    this.socket.on('playerBullet', (data) => {
+      this.handlePlayerBullet(data);
+    });
+
     this.socket.on('playerBullet', (bulletData) => {
       this.handlePlayerBullet(bulletData);
     });
