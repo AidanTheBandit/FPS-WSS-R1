@@ -4,7 +4,7 @@ export const GAME_CONSTANTS = {
   FOV: Math.PI / 3,
   RAY_COUNT: 120,
   MAX_DEPTH: 20,
-  TARGET_FPS: 30,
+  TARGET_FPS: 60,
 
   // Player
   MOVE_SPEED: 0.2,

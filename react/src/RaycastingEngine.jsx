@@ -301,7 +301,17 @@ const RaycastingEngine = () => {
         {gameState.health <= 0 && (
           <div className="respawn-overlay">
             <div className="respawn-message">YOU DIED</div>
-            <button className="respawn-btn" onClick={() => engineRef.current?.respawn()}>
+            <button
+              className="respawn-btn"
+              onClick={() => {
+                console.log('Respawn button clicked');
+                if (engineRef.current?.respawn) {
+                  engineRef.current.respawn();
+                } else {
+                  console.error('Engine respawn method not available');
+                }
+              }}
+            >
               RESPAWN
             </button>
           </div>

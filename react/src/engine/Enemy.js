@@ -82,6 +82,9 @@ export class Enemy {
   attackPlayer() {
     if (!this.scene || !this.scene.player) return;
 
+    // Don't attack if player is invincible
+    if (this.scene.player.invincible) return;
+
     // Deal damage to player
     this.scene.player.takeDamage(GAME_CONSTANTS.ENEMY_ATTACK_DAMAGE);
     if (!this.scene.player.isAlive()) {
