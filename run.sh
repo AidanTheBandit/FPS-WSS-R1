@@ -33,7 +33,7 @@ pm2 delete fps-server 2>/dev/null || true
 # Start the server with PM2
 echo "Starting server with PM2..."
 cd server
-PORT=5462 pm2 start server.js --name fps-server --env production
+NODE_ENV=production PORT=5462 pm2 start server.js --name fps-server
 
 # Wait a moment for the server to start
 sleep 2

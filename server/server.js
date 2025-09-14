@@ -7,9 +7,13 @@ const app = express();
 
 // Serve static files from React build (for production)
 const isProduction = process.env.NODE_ENV === 'production';
+console.log('Environment:', process.env.NODE_ENV);
+console.log('Is production mode:', isProduction);
+
 if (isProduction) {
   const reactBuildPath = path.join(__dirname, '../react/dist');
   console.log('Serving React build from:', reactBuildPath);
+  console.log('React build path exists:', require('fs').existsSync(reactBuildPath));
 
   // Serve static files
   app.use(express.static(reactBuildPath));
@@ -21,6 +25,7 @@ if (isProduction) {
       return next();
     }
 
+    console.log('Serving React app for path:', req.path);
     // Serve React app for everything else
     res.sendFile(path.join(reactBuildPath, 'index.html'), (err) => {
       if (err) {
@@ -29,6 +34,8 @@ if (isProduction) {
       }
     });
   });
+} else {
+  console.log('Running in development mode - React files not served by server');
 }
 
 // Simple CORS middleware for same-origin requests
