@@ -44,30 +44,99 @@ const RaycastingEngine = () => {
     };
   }, []);
 
-  const handleTouch = (action, isStart) => {
+  const [joystickState, setJoystickState] = useState({
+    active: false,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
+    maxDistance: 50
+  });
+
+  const handleJoystickStart = (event) => {
+    event.preventDefault();
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.touches ? event.touches[0].clientX - rect.left : event.clientX - rect.left;
+    const y = event.touches ? event.touches[0].clientY - rect.top : event.clientY - rect.top;
+
+    setJoystickState({
+      active: true,
+      startX: x,
+      startY: y,
+      currentX: x,
+      currentY: y,
+      maxDistance: 50
+    });
+  };
+
+  const handleJoystickMove = (event) => {
+    event.preventDefault();
+    if (!joystickState.active) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.touches ? event.touches[0].clientX - rect.left : event.clientX - rect.left;
+    const y = event.touches ? event.touches[0].clientY - rect.top : event.clientY - rect.top;
+
+    const deltaX = x - joystickState.startX;
+    const deltaY = y - joystickState.startY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    // Limit joystick movement
+    const maxDistance = joystickState.maxDistance;
+    const clampedX = distance > maxDistance ? (deltaX / distance) * maxDistance : deltaX;
+    const clampedY = distance > maxDistance ? (deltaY / distance) * maxDistance : deltaY;
+
+    setJoystickState(prev => ({
+      ...prev,
+      currentX: prev.startX + clampedX,
+      currentY: prev.startY + clampedY
+    }));
+
+    // Update player movement based on joystick position
     if (engineRef.current) {
-      // Handle touch inputs through the engine
-      switch (action) {
-        case 'move_forward':
-          if (isStart) engineRef.current.inputHandler?.startMoving('forward');
-          else engineRef.current.inputHandler?.stopMoving('forward');
-          break;
-        case 'move_backward':
-          if (isStart) engineRef.current.inputHandler?.startMoving('backward');
-          else engineRef.current.inputHandler?.stopMoving('backward');
-          break;
-        case 'turn_left':
-          if (isStart) engineRef.current.inputHandler?.startTurning('left');
-          else engineRef.current.inputHandler?.stopTurning('left');
-          break;
-        case 'turn_right':
-          if (isStart) engineRef.current.inputHandler?.startTurning('right');
-          else engineRef.current.inputHandler?.stopTurning('right');
-          break;
-        case 'shoot':
-          if (isStart) engineRef.current.shoot();
-          break;
+      const normalizedX = clampedX / maxDistance;
+      const normalizedY = clampedY / maxDistance;
+
+      // Movement (Y axis controls forward/backward)
+      if (Math.abs(normalizedY) > 0.1) {
+        if (normalizedY < 0) {
+          engineRef.current.inputHandler?.startMoving('forward');
+          engineRef.current.inputHandler?.stopMoving('backward');
+        } else {
+          engineRef.current.inputHandler?.startMoving('backward');
+          engineRef.current.inputHandler?.stopMoving('forward');
+        }
+      } else {
+        engineRef.current.inputHandler?.stopMoving('forward');
+        engineRef.current.inputHandler?.stopMoving('backward');
       }
+
+      // Turning (X axis controls left/right rotation)
+      if (Math.abs(normalizedX) > 0.1) {
+        if (normalizedX < 0) {
+          engineRef.current.inputHandler?.startTurning('left');
+          engineRef.current.inputHandler?.stopTurning('right');
+        } else {
+          engineRef.current.inputHandler?.startTurning('right');
+          engineRef.current.inputHandler?.stopTurning('left');
+        }
+      } else {
+        engineRef.current.inputHandler?.stopTurning('left');
+        engineRef.current.inputHandler?.stopTurning('right');
+      }
+    }
+  };
+
+  const handleJoystickEnd = (event) => {
+    event.preventDefault();
+    setJoystickState(prev => ({ ...prev, active: false }));
+
+    // Stop all movement
+    if (engineRef.current) {
+      engineRef.current.inputHandler?.stopMoving('forward');
+      engineRef.current.inputHandler?.stopMoving('backward');
+      engineRef.current.inputHandler?.stopTurning('left');
+      engineRef.current.inputHandler?.stopTurning('right');
     }
   };
 

@@ -32,7 +32,6 @@ export class GameEngine {
     // Initialize components
     this.levelManager = new LevelManager();
     this.gameStateManager = new GameState(setGameStateCallback);
-    this.player = new Player(5, 5);
     this.renderer = new Renderer(canvas, this);
     this.inputHandler = new InputHandler(this);
     this.networkManager = new NetworkManager(this);
@@ -43,6 +42,9 @@ export class GameEngine {
 
     // Load first level
     this.loadLevel(this.currentLevel);
+
+    // Initialize player in a valid position after map is loaded
+    this.player = new Player(1.5, 1.5);
 
     // Game loop
     this.lastTime = 0;
@@ -218,8 +220,18 @@ export class GameEngine {
       // Local respawn for single-player fallback
       this.player.health = GAME_CONSTANTS.PLAYER_START_HEALTH;
       this.player.ammo = GAME_CONSTANTS.PLAYER_START_AMMO;
-      this.player.x = 2 + Math.random() * 6;
-      this.player.y = 2 + Math.random() * 6;
+
+      // Find a valid spawn position
+      let spawnX, spawnY;
+      let attempts = 0;
+      do {
+        spawnX = 1.5 + Math.random() * 13;
+        spawnY = 1.5 + Math.random() * 9;
+        attempts++;
+      } while (!this.isValidPosition(spawnX, spawnY) && attempts < 50);
+
+      this.player.x = spawnX;
+      this.player.y = spawnY;
       this.gameState = 'playing';
     }
   }
