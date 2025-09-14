@@ -18,11 +18,11 @@ const RaycastingEngine = () => {
   });
   const [joystickState, setJoystickState] = useState({
     active: false,
-    startX: 60, // Center of 120px joystick base
-    startY: 60,
-    currentX: 60,
-    currentY: 60,
-    maxDistance: 40, // Allow movement within the base
+    startX: 40, // Center of 80px joystick base
+    startY: 40,
+    currentX: 40,
+    currentY: 40,
+    maxDistance: 30, // Allow movement within the 80px base (radius of 35, but using 30 for margin)
     resetTimeout: null // Track reset timeout
   });
 
@@ -101,22 +101,22 @@ const RaycastingEngine = () => {
     const x = event.touches ? event.touches[0].clientX - rect.left : event.clientX - rect.left;
     const y = event.touches ? event.touches[0].clientY - rect.top : event.clientY - rect.top;
 
-    // Calculate distance from center (60, 60 for 120px base)
-    const centerX = 60;
-    const centerY = 60;
+    // Calculate distance from center (40, 40 for 80px base)
+    const centerX = 40;
+    const centerY = 40;
     const deltaX = x - centerX;
     const deltaY = y - centerY;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
     // If the touch/mouse has moved too far from the joystick base, release it
-    const maxAllowedDistance = 100; // Allow some tolerance beyond the visual base
+    const maxAllowedDistance = 80; // Allow some tolerance beyond the visual base
     if (distance > maxAllowedDistance) {
       handleJoystickEnd(event);
       return;
     }
 
     // Limit to joystick base radius
-    const maxDistance = 40; // Smaller than 50 to stay within visual base
+    const maxDistance = 30; // Radius of 35px, but using 30 for visual margin
     const clampedX = distance > maxDistance ? (deltaX / distance) * maxDistance : deltaX;
     const clampedY = distance > maxDistance ? (deltaY / distance) * maxDistance : deltaY;
 
@@ -150,8 +150,8 @@ const RaycastingEngine = () => {
     setJoystickState(prev => ({
       ...prev,
       active: false,
-      currentX: 60, // Reset to center
-      currentY: 60,
+      currentX: 40, // Reset to center of 80px base
+      currentY: 40,
       resetTimeout: null
     }));
 
@@ -267,8 +267,8 @@ const RaycastingEngine = () => {
               <div
                 className="joystick-center"
                 style={{
-                  left: '60px',
-                  top: '60px',
+                  left: '40px',
+                  top: '40px',
                   transform: 'translate(-50%, -50%)'
                 }}
               />

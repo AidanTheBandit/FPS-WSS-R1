@@ -169,6 +169,7 @@ html, body {
   cursor: pointer;
   touch-action: none;
   user-select: none;
+  transition: all 0.1s ease;
 }
 
 .joystick-handle {
