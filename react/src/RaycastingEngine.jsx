@@ -88,17 +88,8 @@ const RaycastingEngine = () => {
       e.preventDefault();
     };
 
-    const preventTouchMove = (e) => {
-      if (e.target.closest('.joystick-container') || e.target.closest('.action-buttons')) {
-        return; // Allow touch events on controls
-      }
-      e.preventDefault();
-    };
-
-    // Prevent all types of scrolling
+    // Only prevent wheel scrolling, not touch events
     document.addEventListener('wheel', preventWheel, { passive: false });
-    document.addEventListener('touchmove', preventTouchMove, { passive: false });
-    document.addEventListener('scroll', preventScroll, { passive: false });
 
     // Prevent context menu
     const preventContextMenu = (e) => e.preventDefault();
@@ -106,14 +97,12 @@ const RaycastingEngine = () => {
 
     // Prevent zoom gestures
     const preventGesture = (e) => e.preventDefault();
-    document.addEventListener('gesturestart', preventGesture);
-    document.addEventListener('gesturechange', preventGesture);
-    document.addEventListener('gestureend', preventGesture);
+    document.addEventListener('gesturestart', preventGesture, { passive: false });
+    document.addEventListener('gesturechange', preventGesture, { passive: false });
+    document.addEventListener('gestureend', preventGesture, { passive: false });
 
     return () => {
       document.removeEventListener('wheel', preventWheel);
-      document.removeEventListener('touchmove', preventTouchMove);
-      document.removeEventListener('scroll', preventScroll);
       document.removeEventListener('contextmenu', preventContextMenu);
       document.removeEventListener('gesturestart', preventGesture);
       document.removeEventListener('gesturechange', preventGesture);
@@ -122,7 +111,10 @@ const RaycastingEngine = () => {
   }, []);
 
   const handleJoystickStart = (event) => {
-    event.preventDefault();
+    // Only prevent default for touch events to avoid passive listener issues
+    if (event.touches) {
+      event.preventDefault();
+    }
     const rect = event.currentTarget.getBoundingClientRect();
     const x = event.touches ? event.touches[0].clientX - rect.left : event.clientX - rect.left;
     const y = event.touches ? event.touches[0].clientY - rect.top : event.clientY - rect.top;
@@ -138,7 +130,10 @@ const RaycastingEngine = () => {
   };
 
   const handleJoystickMove = (event) => {
-    event.preventDefault();
+    // Only prevent default for touch events to avoid passive listener issues
+    if (event.touches) {
+      event.preventDefault();
+    }
     if (!joystickState.active) return;
 
     const rect = event.currentTarget.getBoundingClientRect();
@@ -184,7 +179,10 @@ const RaycastingEngine = () => {
   };
 
   const handleJoystickEnd = (event) => {
-    event.preventDefault();
+    // Only prevent default for touch events to avoid passive listener issues
+    if (event.touches || event.changedTouches) {
+      event.preventDefault();
+    }
 
     // Clear any existing reset timeout
     if (joystickState.resetTimeout) {
@@ -214,12 +212,18 @@ const RaycastingEngine = () => {
       }
     };
 
+    const handleGlobalTouchEnd = (event) => {
+      if (joystickState.active) {
+        handleJoystickEnd(event);
+      }
+    };
+
     document.addEventListener('mouseup', handleGlobalMouseUp);
-    document.addEventListener('touchend', handleGlobalMouseUp);
+    document.addEventListener('touchend', handleGlobalTouchEnd, { passive: true });
 
     return () => {
       document.removeEventListener('mouseup', handleGlobalMouseUp);
-      document.removeEventListener('touchend', handleGlobalMouseUp);
+      document.removeEventListener('touchend', handleGlobalTouchEnd);
       // Clear any pending timeout on cleanup
       if (joystickState.resetTimeout) {
         clearTimeout(joystickState.resetTimeout);
@@ -277,9 +281,27 @@ const RaycastingEngine = () => {
           <div className="joystick-container">
             <div
               className="joystick-base"
-              onTouchStart={(e) => { e.preventDefault(); handleJoystickStart(e); }}
-              onTouchMove={(e) => { e.preventDefault(); handleJoystickMove(e); }}
-              onTouchEnd={(e) => { e.preventDefault(); handleJoystickEnd(e); }}
+              onTouchStart={(e) => {
+                // Only prevent default for actual touch events
+                if (e.touches) {
+                  e.preventDefault();
+                }
+                handleJoystickStart(e);
+              }}
+              onTouchMove={(e) => {
+                // Only prevent default for actual touch events
+                if (e.touches) {
+                  e.preventDefault();
+                }
+                handleJoystickMove(e);
+              }}
+              onTouchEnd={(e) => {
+                // Only prevent default for actual touch events
+                if (e.touches || e.changedTouches) {
+                  e.preventDefault();
+                }
+                handleJoystickEnd(e);
+              }}
               onMouseDown={handleJoystickStart}
               onMouseMove={handleJoystickMove}
               onMouseUp={handleJoystickEnd}
@@ -318,7 +340,13 @@ const RaycastingEngine = () => {
           <div className="action-buttons">
             <button
               className="action-btn shoot-btn"
-              onTouchStart={(e) => { e.preventDefault(); handleFire(); }}
+              onTouchStart={(e) => {
+                // Only prevent default for actual touch events, not mouse events
+                if (e.touches) {
+                  e.preventDefault();
+                }
+                handleFire();
+              }}
               onMouseDown={handleFire}
             >
               FIRE

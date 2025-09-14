@@ -30,6 +30,9 @@ html, body {
   touch-action: none;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* Game Canvas - Full Screen */
