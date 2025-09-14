@@ -21,24 +21,56 @@ export class NetworkManager {
 
     this.pendingMoves = [];
     this.lastSentPosition = { x: 0, y: 0, angle: 0 };
+    this.connectionAttempts = 0;
+    this.maxConnectionAttempts = 5;
+    this.reconnectDelay = 2000; // 2 seconds
+    this.reconnectTimer = null;
   }
 
   connect() {
-    this.socket = io(this.serverUrl);
+    console.log(`Attempting to connect to server: ${this.serverUrl}`);
+    this.connectionAttempts++;
+
+    this.socket = io(this.serverUrl, {
+      timeout: 5000, // 5 second connection timeout
+      reconnection: true,
+      reconnectionAttempts: 3,
+      reconnectionDelay: 1000
+    });
 
     this.socket.on('connect', () => {
-      console.log('Connected to server');
+      console.log('✅ Connected to server successfully');
       this.connected = true;
+      this.connectionAttempts = 0; // Reset attempts on successful connection
       this.localPlayerId = this.socket.id;
       this.gameEngine.gameStateManager.updateConnectionStatus(true, this.socket.id);
       this.gameEngine.gameStateManager.updateConnectedPlayers(this.players.size + 1);
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from server');
+    this.socket.on('connect_error', (error) => {
+      console.error('❌ Connection error:', error.message);
+      this.connected = false;
+      this.gameEngine.gameStateManager.updateConnectionStatus(false);
+
+      if (this.connectionAttempts < this.maxConnectionAttempts) {
+        console.log(`Retrying connection in ${this.reconnectDelay}ms... (${this.connectionAttempts}/${this.maxConnectionAttempts})`);
+        setTimeout(() => this.connect(), this.reconnectDelay);
+      } else {
+        console.error('Max connection attempts reached. Please check if the server is running.');
+      }
+    });
+
+    this.socket.on('disconnect', (reason) => {
+      console.log('🔌 Disconnected from server:', reason);
       this.connected = false;
       this.gameEngine.gameStateManager.updateConnectionStatus(false);
       this.gameEngine.gameStateManager.updateConnectedPlayers(0);
+
+      // Auto-reconnect unless it was intentional
+      if (reason === 'io server disconnect' || reason === 'io client disconnect') {
+        console.log('Connection lost, attempting to reconnect...');
+        setTimeout(() => this.connect(), this.reconnectDelay);
+      }
     });
 
     this.socket.on('gameState', (data) => {
