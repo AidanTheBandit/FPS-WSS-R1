@@ -6,7 +6,10 @@ export class GameState {
       ammo: 50,
       level: 1,
       enemies: 0,
-      score: 0
+      score: 0,
+      connectedPlayers: 0,
+      isConnected: false,
+      playerId: null
     };
   }
 
@@ -32,6 +35,17 @@ export class GameState {
 
   updateScore(score) {
     this.state.score = score;
+    this.notifyUpdate();
+  }
+
+  updateConnectedPlayers(count) {
+    this.state.connectedPlayers = count;
+    this.notifyUpdate();
+  }
+
+  updateConnectionStatus(isConnected, playerId = null) {
+    this.state.isConnected = isConnected;
+    this.state.playerId = playerId;
     this.notifyUpdate();
   }
 

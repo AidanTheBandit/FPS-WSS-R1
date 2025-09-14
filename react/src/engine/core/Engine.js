@@ -216,4 +216,13 @@ export class Engine {
       this.frameInterval = 1000 / this.config.targetFPS;
     }
   }
+
+  /**
+   * Respawn player (called from UI)
+   */
+  respawn() {
+    if (this.sceneManager.currentScene && typeof this.sceneManager.currentScene.respawn === 'function') {
+      this.sceneManager.currentScene.respawn();
+    }
+  }
 }

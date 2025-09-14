@@ -1,0 +1,203 @@
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
+const path = require('path');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Game state
+const players = new Map();
+const gameState = {
+  level: 1,
+  enemies: [],
+  maxPlayers: 8
+};
+
+// Game constants (mirroring client)
+const GAME_CONSTANTS = {
+  MOVE_SPEED: 0.2,
+  TURN_SPEED: 0.1,
+  PLAYER_START_HEALTH: 100,
+  SHOOT_DAMAGE: 50,
+  SHOOT_DISTANCE: 10
+};
+
+// Simple map (same as client for now)
+const MAP = [
+  [1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,1],
+  [1,0,1,0,1,0,1,0,0,1],
+  [1,0,0,0,0,0,0,0,0,1],
+  [1,0,1,0,1,0,1,0,0,1],
+  [1,0,0,0,0,0,0,0,0,1],
+  [1,0,1,0,1,0,1,0,0,1],
+  [1,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1]
+];
+
+function isValidPosition(x, y) {
+  const mapX = Math.floor(x);
+  const mapY = Math.floor(y);
+  if (mapX < 0 || mapX >= MAP[0].length || mapY < 0 || mapY >= MAP.length) {
+    return false;
+  }
+  return MAP[mapY][mapX] === 0;
+}
+
+function generatePlayerId() {
+  return Math.random().toString(36).substr(2, 9);
+}
+
+function createPlayer(socketId) {
+  return {
+    id: socketId,
+    x: 2 + Math.random() * 6,
+    y: 2 + Math.random() * 6,
+    angle: 0,
+    health: GAME_CONSTANTS.PLAYER_START_HEALTH,
+    ammo: 50,
+    score: 0,
+    lastUpdate: Date.now(),
+    connected: true
+  };
+}
+
+io.on('connection', (socket) => {
+  console.log(`Player connected: ${socket.id}`);
+
+  // Create new player
+  const player = createPlayer(socket.id);
+  players.set(socket.id, player);
+
+  // Send current game state to new player
+  socket.emit('gameState', {
+    players: Array.from(players.values()),
+    gameState: gameState
+  });
+
+  // Notify other players of new player
+  socket.broadcast.emit('playerJoined', player);
+
+  // Handle player movement
+  socket.on('playerMove', (data) => {
+    const player = players.get(socket.id);
+    if (!player || !player.connected) return;
+
+    const { x, y, angle } = data;
+
+    // Validate movement
+    if (isValidPosition(x, y)) {
+      player.x = x;
+      player.y = y;
+      player.angle = angle;
+      player.lastUpdate = Date.now();
+
+      // Broadcast to other players
+      socket.broadcast.emit('playerMoved', {
+        id: socket.id,
+        x, y, angle
+      });
+    }
+  });
+
+  // Handle shooting
+  socket.on('playerShoot', (data) => {
+    const player = players.get(socket.id);
+    if (!player || !player.connected || player.ammo <= 0) return;
+
+    player.ammo--;
+
+    // Check for hits on other players
+    const { angle } = data;
+    const shooterX = player.x;
+    const shooterY = player.y;
+
+    // Simple hit detection (can be improved)
+    players.forEach((targetPlayer, targetId) => {
+      if (targetId === socket.id || !targetPlayer.connected) return;
+
+      const dx = targetPlayer.x - shooterX;
+      const dy = targetPlayer.y - shooterY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance <= GAME_CONSTANTS.SHOOT_DISTANCE) {
+        const angleToTarget = Math.atan2(dy, dx);
+        const angleDiff = Math.abs(angleToTarget - angle);
+        const normalizedAngleDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
+
+        if (normalizedAngleDiff <= Math.PI / 6) { // 30 degree cone
+          // Hit!
+          targetPlayer.health -= GAME_CONSTANTS.SHOOT_DAMAGE;
+          player.score += 100;
+
+          // Broadcast hit
+          io.emit('playerHit', {
+            shooterId: socket.id,
+            targetId: targetId,
+            damage: GAME_CONSTANTS.SHOOT_DAMAGE,
+            newHealth: targetPlayer.health
+          });
+
+          // Check if player died
+          if (targetPlayer.health <= 0) {
+            targetPlayer.health = 0;
+            io.emit('playerDied', {
+              playerId: targetId,
+              killerId: socket.id
+            });
+          }
+        }
+      }
+    });
+
+    // Broadcast shoot event
+    socket.broadcast.emit('playerShot', {
+      playerId: socket.id,
+      ammo: player.ammo
+    });
+  });
+
+  // Handle player respawn
+  socket.on('playerRespawn', () => {
+    const player = players.get(socket.id);
+    if (!player) return;
+
+    player.health = GAME_CONSTANTS.PLAYER_START_HEALTH;
+    player.x = 2 + Math.random() * 6;
+    player.y = 2 + Math.random() * 6;
+    player.ammo = 50;
+
+    io.emit('playerRespawned', player);
+  });
+
+  // Handle disconnect
+  socket.on('disconnect', () => {
+    console.log(`Player disconnected: ${socket.id}`);
+    const player = players.get(socket.id);
+    if (player) {
+      player.connected = false;
+      socket.broadcast.emit('playerLeft', socket.id);
+
+      // Remove player after delay to allow reconnection
+      setTimeout(() => {
+        if (!player.connected) {
+          players.delete(socket.id);
+        }
+      }, 5000);
+    }
+  });
+});
+
+// Start server
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+  console.log(`Multiplayer FPS server running on port ${PORT}`);
+});

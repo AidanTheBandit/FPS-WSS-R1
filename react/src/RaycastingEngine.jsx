@@ -7,7 +7,16 @@ import LoadingScreen from './components/LoadingScreen.jsx';
 const RaycastingEngine = () => {
   const canvasRef = useRef(null);
   const engineRef = useRef(null);
-  const [gameState, setGameState] = useState({ health: 100, ammo: 50, level: 1, enemies: 0, score: 0 });
+  const [gameState, setGameState] = useState({
+    health: 100,
+    ammo: 50,
+    level: 1,
+    enemies: 0,
+    score: 0,
+    connectedPlayers: 0,
+    isConnected: false,
+    playerId: null
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -53,6 +62,30 @@ const RaycastingEngine = () => {
       {isLoading && <LoadingScreen />}
       <div className="game-container">
         <canvas ref={canvasRef} className="game-canvas" />
+
+        {/* Multiplayer HUD */}
+        <div className="multiplayer-hud">
+          <div className={`connection-status ${gameState.isConnected ? 'connected' : 'disconnected'}`}>
+            {gameState.isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+          </div>
+          <div className="player-count">
+            Players: {gameState.connectedPlayers}
+          </div>
+          {gameState.playerId && (
+            <div className="player-id">
+              ID: {gameState.playerId.substring(0, 8)}
+            </div>
+          )}
+        </div>
+
+        {/* Game Stats HUD */}
+        <div className="game-hud">
+          <div className="health">Health: {gameState.health}</div>
+          <div className="ammo">Ammo: {gameState.ammo}</div>
+          <div className="score">Score: {gameState.score}</div>
+          <div className="level">Level: {gameState.level}</div>
+        </div>
+
         <div className="touch-controls">
           <div className="dpad">
             <button tabIndex="0" className="up" onTouchStart={() => handleTouch('move_forward', true)} onTouchEnd={() => handleTouch('move_forward', false)}
@@ -72,6 +105,16 @@ const RaycastingEngine = () => {
                     onMouseDown={() => handleTouch('strafe', true)} onMouseUp={() => handleTouch('strafe', false)}>STRAFE</button>
           </div>
         </div>
+
+        {/* Respawn Button */}
+        {gameState.health <= 0 && (
+          <div className="respawn-overlay">
+            <div className="respawn-message">YOU DIED</div>
+            <button className="respawn-btn" onClick={() => engineRef.current?.respawn()}>
+              RESPAWN
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

@@ -1,8 +1,9 @@
-# Rabbit-Raycast
+# Rabbit-Raycast - Multiplayer FPS
 
-A complete JavaScript implementation of a Doom-like 3D raycasting engine, optimized for the R1 device (240x320px portrait screen) with hardware integration and touch controls.
+A complete JavaScript implementation of a Doom-like 3D raycasting engine, now with **multiplayer support**! Optimized for the R1 device (240x320px portrait screen) with hardware integration and touch controls.
 
 ![Rabbit-Raycast Demo](https://img.shields.io/badge/Demo-Raycasting-blue)
+![Multiplayer](https://img.shields.io/badge/Multiplayer-FPS-red)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
@@ -11,6 +12,7 @@ A complete JavaScript implementation of a Doom-like 3D raycasting engine, optimi
 Rabbit-Raycast is a from-scratch implementation of classic 3D raycasting technology, similar to the rendering engine used in Wolfenstein 3D and Doom. This demo showcases:
 
 - **Real-time 3D rendering** using raycasting algorithm
+- **Multiplayer FPS gameplay** with real-time player synchronization
 - **Hardware-optimized** for R1 device (240x320px)
 - **Touch controls** with virtual D-pad and action buttons
 - **Physical controls** integration (scroll wheel, side button)
@@ -38,42 +40,43 @@ Rabbit-Raycast is a from-scratch implementation of classic 3D raycasting technol
 - **HUD Display**: Health and ammo counters
 - **Responsive Layout**: Adapts to screen orientation changes
 
+### Multiplayer Features
+- **Real-time Multiplayer**: Up to 8 players in a single match
+- **Player Synchronization**: Position, rotation, and actions synced across clients
+- **Health & Combat**: Player vs player combat with damage and respawning
+- **Connection Status**: Real-time connection monitoring
+- **Player Identification**: Unique player IDs and visual indicators
+
 ## 🚀 Quick Start
 
-### Prerequisites
-- Modern web browser with ES6+ support
-- Node.js 16+ (for development)
-- Vite (build tool)
+### Multiplayer Setup
 
-### Installation
-
-1. **Clone the repository**
+1. **Start the Server**
    ```bash
-   git clone https://github.com/AidanTheBandit/Rabbit-Raycast.git
-   cd Rabbit-Raycast
+   # From the project root
+   ./start-server.sh
    ```
-
-2. **Install dependencies**
+   Or manually:
    ```bash
-   cd apps/app
+   cd server
    npm install
+   npm start
    ```
 
-3. **Start development server**
+2. **Start the Client**
    ```bash
+   cd react
+   npm install
    npm run dev
    ```
 
-4. **Build for production**
-   ```bash
-   npm run build
-   ```
+3. **Connect Multiple Clients**
+   - Open multiple browser tabs/windows to `http://localhost:5173`
+   - Each client will automatically connect to the server
+   - Players can see each other and engage in combat
 
-### Running the Demo
-
-- **Web Browser**: Open `index.html` in your browser
-- **R1 Device**: Deploy as a webview plugin
-- **Development**: Use `npm run dev` for hot reloading
+### Single Player Mode
+The game automatically falls back to single-player mode if the server is unavailable.
 
 ## 🎯 Controls
 

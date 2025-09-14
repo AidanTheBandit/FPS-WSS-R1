@@ -5,6 +5,7 @@ import { LevelManager } from './Level.js';
 import { Renderer } from './Renderer.js';
 import { InputHandler } from './InputHandler.js';
 import { GameState } from './GameState.js';
+import { NetworkManager } from './NetworkManager.js';
 
 export class GameEngine {
   constructor(canvas, setGameStateCallback) {
@@ -34,6 +35,7 @@ export class GameEngine {
     this.player = new Player(5, 5);
     this.renderer = new Renderer(canvas, this);
     this.inputHandler = new InputHandler(this);
+    this.networkManager = new NetworkManager(this);
 
     // Game objects
     this.enemies = [];
@@ -65,12 +67,14 @@ export class GameEngine {
   start() {
     this.running = true;
     this.lastTime = performance.now();
+    this.networkManager.connect();
     this.gameLoop(this.lastTime);
   }
 
   stop() {
     this.running = false;
     this.inputHandler.cleanup();
+    this.networkManager.disconnect();
   }
 
   gameLoop(currentTime) {
@@ -93,6 +97,11 @@ export class GameEngine {
 
     // Update enemies
     this.enemies.forEach(enemy => enemy.update(deltaTime));
+
+    // Send player position to server
+    if (this.networkManager.isConnected()) {
+      this.networkManager.sendPlayerMove(this.player.x, this.player.y, this.player.angle);
+    }
 
     // Update game state
     this.gameStateManager.updateHealth(this.player.health);
@@ -136,44 +145,54 @@ export class GameEngine {
     if (this.player.shoot() && this.gameState === 'playing') {
       this.renderer.triggerMuzzleFlash();
 
-      // Check for enemy hits with proper line-of-sight
-      const shootAngle = this.player.angle;
-      const maxShootDistance = GAME_CONSTANTS.SHOOT_DISTANCE;
+      // Send shoot event to server
+      if (this.networkManager.isConnected()) {
+        this.networkManager.sendPlayerShoot(this.player.angle);
+      } else {
+        // Fallback to single-player mode
+        this.handleLocalShoot();
+      }
+    }
+  }
 
-      // Find all enemies in shooting range and check line of sight
-      const visibleEnemies = this.enemies.filter(enemy => {
-        const dx = enemy.x - this.player.x;
-        const dy = enemy.y - this.player.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+  handleLocalShoot() {
+    // Check for enemy hits with proper line-of-sight
+    const shootAngle = this.player.angle;
+    const maxShootDistance = GAME_CONSTANTS.SHOOT_DISTANCE;
 
-        // Check if enemy is within shooting distance
-        if (distance > maxShootDistance) return false;
+    // Find all enemies in shooting range and check line of sight
+    const visibleEnemies = this.enemies.filter(enemy => {
+      const dx = enemy.x - this.player.x;
+      const dy = enemy.y - this.player.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
-        // Check if enemy is in front (within reasonable angle)
-        const angleToEnemy = Math.atan2(dy, dx);
-        const angleDiff = Math.abs(angleToEnemy - shootAngle);
-        const normalizedAngleDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
-        if (normalizedAngleDiff > Math.PI / 6) return false; // 30 degree cone
+      // Check if enemy is within shooting distance
+      if (distance > maxShootDistance) return false;
 
-        // Check line of sight - cast ray to enemy position
-        const rayDistance = this.castRay(angleToEnemy);
-        return rayDistance >= distance;
+      // Check if enemy is in front (within reasonable angle)
+      const angleToEnemy = Math.atan2(dy, dx);
+      const angleDiff = Math.abs(angleToEnemy - shootAngle);
+      const normalizedAngleDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
+      if (normalizedAngleDiff > Math.PI / 6) return false; // 30 degree cone
+
+      // Check line of sight - cast ray to enemy position
+      const rayDistance = this.castRay(angleToEnemy);
+      return rayDistance >= distance;
+    });
+
+    // Hit the closest visible enemy
+    if (visibleEnemies.length > 0) {
+      const closestEnemy = visibleEnemies.reduce((closest, enemy) => {
+        const distClosest = Math.sqrt(
+          (closest.x - this.player.x) ** 2 + (closest.y - this.player.y) ** 2
+        );
+        const distCurrent = Math.sqrt(
+          (enemy.x - this.player.x) ** 2 + (enemy.y - this.player.y) ** 2
+        );
+        return distCurrent < distClosest ? enemy : closest;
       });
 
-      // Hit the closest visible enemy
-      if (visibleEnemies.length > 0) {
-        const closestEnemy = visibleEnemies.reduce((closest, enemy) => {
-          const distClosest = Math.sqrt(
-            (closest.x - this.player.x) ** 2 + (closest.y - this.player.y) ** 2
-          );
-          const distCurrent = Math.sqrt(
-            (enemy.x - this.player.x) ** 2 + (enemy.y - this.player.y) ** 2
-          );
-          return distCurrent < distClosest ? enemy : closest;
-        });
-
-        closestEnemy.takeDamage(GAME_CONSTANTS.SHOOT_DAMAGE);
-      }
+      closestEnemy.takeDamage(GAME_CONSTANTS.SHOOT_DAMAGE);
     }
   }
 
@@ -192,13 +211,16 @@ export class GameEngine {
     }
   }
 
-  handleOrientationChange() {
-    const isLandscape = window.innerWidth > window.innerHeight;
-    this.width = isLandscape ? GAME_CONSTANTS.LANDSCAPE_WIDTH : GAME_CONSTANTS.CANVAS_WIDTH;
-    this.height = isLandscape ? GAME_CONSTANTS.LANDSCAPE_HEIGHT : GAME_CONSTANTS.CANVAS_HEIGHT;
-    this.rayCount = isLandscape ? GAME_CONSTANTS.LANDSCAPE_RAY_COUNT : GAME_CONSTANTS.RAY_COUNT;
-
-    this.canvas.width = this.width;
-    this.canvas.height = this.height;
+  respawn() {
+    if (this.gameState === 'gameOver' && this.networkManager.isConnected()) {
+      this.networkManager.sendPlayerRespawn();
+    } else {
+      // Local respawn for single-player fallback
+      this.player.health = GAME_CONSTANTS.PLAYER_START_HEALTH;
+      this.player.ammo = GAME_CONSTANTS.PLAYER_START_AMMO;
+      this.player.x = 2 + Math.random() * 6;
+      this.player.y = 2 + Math.random() * 6;
+      this.gameState = 'playing';
+    }
   }
 }

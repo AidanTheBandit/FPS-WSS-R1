@@ -100,6 +100,38 @@ export class Renderer {
       });
     }
 
+    // Add remote players to render queue
+    if (this.engine.networkManager) {
+      const remotePlayers = this.engine.networkManager.getRemotePlayers();
+      remotePlayers.forEach(remotePlayer => {
+        const dx = remotePlayer.x - player.x;
+        const dy = remotePlayer.y - player.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Calculate angle relative to player
+        const angle = Math.atan2(dy, dx) - player.angle;
+
+        // Normalize angle to -PI to PI
+        let normalizedAngle = angle;
+        while (normalizedAngle > Math.PI) normalizedAngle -= 2 * Math.PI;
+        while (normalizedAngle < -Math.PI) normalizedAngle += 2 * Math.PI;
+
+        // Check if player is in field of view
+        if (Math.abs(normalizedAngle) < fov / 2) {
+          // Check line of sight (not behind walls)
+          const rayDistance = this.castRay(player.x, player.y, Math.atan2(dy, dx), map, maxDepth);
+          if (rayDistance >= distance) {
+            renderQueue.push({
+              type: 'player',
+              player: remotePlayer,
+              distance: distance,
+              angle: normalizedAngle
+            });
+          }
+        }
+      });
+    }
+
     // Sort by distance (closest first for proper depth - render far to near)
     renderQueue.sort((a, b) => b.distance - a.distance);
 
@@ -109,6 +141,8 @@ export class Renderer {
         this.renderWallColumn(item.x, item.distance, item.rayAngle, rayCount, maxDepth);
       } else if (item.type === 'enemy') {
         this.renderEnemySprite(item.enemy, item.distance, item.angle, fov);
+      } else if (item.type === 'player') {
+        this.renderPlayerSprite(item.player, item.distance, item.angle, fov);
       }
     });
   }
@@ -127,6 +161,43 @@ export class Renderer {
       this.width / rayCount + 1,
       wallBottom - wallTop
     );
+  }
+
+  renderPlayerSprite(player, distance, angle, fov) {
+    if (!player || typeof player.health === 'undefined') return;
+
+    // Calculate screen position
+    const screenX = (angle / (fov / 2)) * (this.width / 2) + this.width / 2;
+    const wallHeight = (this.height / 2) / distance;
+    const playerHeight = wallHeight * 0.8; // Slightly smaller than walls
+    const playerTop = (this.height / 2) - playerHeight / 2;
+    const playerBottom = (this.height / 2) + playerHeight / 2;
+
+    // Draw player sprite (different color from enemies)
+    this.ctx.fillStyle = player.health > 50 ? '#0088ff' : player.health > 25 ? '#ff8800' : '#ff4444';
+    this.ctx.fillRect(
+      screenX - playerHeight / 4,
+      playerTop,
+      playerHeight / 2,
+      playerHeight
+    );
+
+    // Draw health bar
+    const barWidth = playerHeight / 2;
+    const barHeight = 4;
+    const healthPercent = player.health / 100;
+
+    this.ctx.fillStyle = '#000';
+    this.ctx.fillRect(screenX - barWidth / 2, playerTop - 8, barWidth, barHeight);
+
+    this.ctx.fillStyle = healthPercent > 0.5 ? '#0f0' : healthPercent > 0.25 ? '#ff0' : '#f00';
+    this.ctx.fillRect(screenX - barWidth / 2, playerTop - 8, barWidth * healthPercent, barHeight);
+
+    // Draw player name/ID
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = '8px monospace';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText(player.id.substring(0, 4), screenX, playerTop - 12);
   }
 
   renderEnemySprite(enemy, distance, angle, fov) {
@@ -240,5 +311,13 @@ export class Renderer {
 
   triggerMuzzleFlash() {
     this.muzzleFlash = 0.5;
+  }
+
+  triggerRemoteMuzzleFlash(playerId) {
+    // Could add player-specific muzzle flash effects here
+    // For now, just trigger a subtle screen flash
+    if (this.muzzleFlash < 0.1) {
+      this.muzzleFlash = 0.1;
+    }
   }
 }

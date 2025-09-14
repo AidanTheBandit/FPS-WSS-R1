@@ -373,16 +373,17 @@ export class DoomDemoScene extends Scene {
   }
 
   /**
-   * Get demo statistics
+   * Respawn player
    */
-  getStats() {
-    return {
-      ...super.getStats(),
-      gameState: this.gameState,
-      currentLevel: this.currentLevel,
-      playerHealth: this.player?.health || 0,
-      enemyCount: this.enemies.length,
-      score: this.score
-    };
+  respawn() {
+    if (this.player) {
+      this.player.health = GAME_CONSTANTS.PLAYER_START_HEALTH;
+      this.player.ammo = GAME_CONSTANTS.PLAYER_START_AMMO;
+      this.player.x = 8;
+      this.player.y = 5;
+      this.gameState = 'playing';
+      this.gameStats.health = this.player.health;
+      this.gameStats.ammo = this.player.ammo;
+    }
   }
 }

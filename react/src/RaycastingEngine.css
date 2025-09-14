@@ -39,27 +39,101 @@ html, body {
   display: block;
 }
 
-/* HUD Elements */
-.hud {
+/* Multiplayer HUD */
+.multiplayer-hud {
   position: absolute;
   top: 2vw;
-  left: 2vw;
   right: 2vw;
   display: flex;
-  justify-content: space-between;
-  font-size: clamp(16px, 4vw, 32px);
-  color: #FE5F00;
+  flex-direction: column;
+  gap: 1vw;
+  font-size: clamp(12px, 2.5vw, 24px);
   z-index: 50;
   pointer-events: none;
+}
+
+.connection-status {
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: clamp(4px, 1vw, 8px);
+  border-radius: clamp(2px, 0.5vw, 4px);
+  border: 1px solid #FE5F00;
+  color: #FE5F00;
   font-weight: bold;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 
-.hud span {
-  background-color: rgba(0, 0, 0, 0.7);
+.connection-status.connected {
+  color: #00ff00;
+  border-color: #00ff00;
+}
+
+.connection-status.disconnected {
+  color: #ff0000;
+  border-color: #ff0000;
+}
+
+.player-count {
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: clamp(4px, 1vw, 8px);
+  border-radius: clamp(2px, 0.5vw, 4px);
+  border: 1px solid #0088ff;
+  color: #0088ff;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.player-id {
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: clamp(4px, 1vw, 8px);
+  border-radius: clamp(2px, 0.5vw, 4px);
+  border: 1px solid #ffff00;
+  color: #ffff00;
+  font-size: clamp(10px, 2vw, 20px);
+  font-family: monospace;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Game Stats HUD */
+.game-hud {
+  position: absolute;
+  top: 2vw;
+  left: 2vw;
+  display: flex;
+  flex-direction: column;
+  gap: 1vw;
+  font-size: clamp(12px, 2.5vw, 24px);
+  z-index: 50;
+  pointer-events: none;
+}
+
+.game-hud > div {
+  background-color: rgba(0, 0, 0, 0.8);
   padding: clamp(4px, 1vw, 8px);
   border-radius: clamp(2px, 0.5vw, 4px);
   border: 1px solid #FE5F00;
+  color: #FE5F00;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.health {
+  color: #ff4444;
+  border-color: #ff4444;
+}
+
+.ammo {
+  color: #ffff44;
+  border-color: #ffff44;
+}
+
+.score {
+  color: #44ff44;
+  border-color: #44ff44;
+}
+
+.level {
+  color: #4444ff;
+  border-color: #4444ff;
 }
 
 /* Touch Controls - Portrait Mode (240x320) */
@@ -222,7 +296,47 @@ html, body {
   }
 }
 
-/* Hidden class for showing/hiding elements */
-.hidden {
-  display: none !important;
+/* Respawn Overlay */
+.respawn-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.respawn-message {
+  font-size: clamp(24px, 8vw, 48px);
+  color: #ff4444;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+  margin-bottom: 2vh;
+}
+
+.respawn-btn {
+  padding: clamp(12px, 3vw, 24px) clamp(24px, 6vw, 48px);
+  font-size: clamp(16px, 4vw, 32px);
+  background-color: rgba(255, 68, 68, 0.9);
+  border: 2px solid #ff4444;
+  color: #fff;
+  border-radius: clamp(8px, 2vw, 16px);
+  cursor: pointer;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  transition: all 0.2s ease;
+}
+
+.respawn-btn:hover {
+  background-color: rgba(255, 68, 68, 1);
+  transform: scale(1.05);
+}
+
+.respawn-btn:active {
+  transform: scale(0.95);
 }
