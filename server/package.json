@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "build": "echo 'Backend build complete - no build step needed for Node.js server'",
+    "clean": "echo 'Nothing to clean for Node.js server'"
   },
   "dependencies": {
     "socket.io": "^4.7.5",

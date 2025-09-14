@@ -1,0 +1,59 @@
+{
+  "name": "fps-wss-r1-monorepo",
+  "version": "1.0.0",
+  "description": "Multiplayer FPS game with React frontend and Node.js backend",
+  "private": true,
+  "workspaces": [
+    "react",
+    "server"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm run install:server",
+    "install:server": "cd server && npm install",
+    "build": "npm run build:frontend",
+    "build:frontend": "cd react && npm run build:prod",
+    "build:backend": "cd server && npm run build",
+    "build:all": "npm run build:frontend && npm run build:backend",
+    "start": "npm run start:dev",
+    "start:dev": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
+    "start:frontend": "cd react && npm run dev",
+    "start:backend": "cd server && npm run dev",
+    "start:prod": "npm run build:all && concurrently \"npm run start:frontend:prod\" \"npm run start:backend:prod\"",
+    "start:frontend:prod": "cd react && npm run serve",
+    "start:backend:prod": "cd server && npm start",
+    "tunnel": "npm run tunnel:dev",
+    "tunnel:dev": "concurrently \"npm run tunnel:frontend\" \"npm run tunnel:backend\"",
+    "tunnel:frontend": "cloudflared tunnel --url http://localhost:5173",
+    "tunnel:backend": "cloudflared tunnel --url http://localhost:3001",
+    "tunnel:prod": "npm run build:all && concurrently \"npm run tunnel:frontend:prod\" \"npm run tunnel:backend:prod\"",
+    "tunnel:frontend:prod": "cd react && npm run serve & cloudflared tunnel --url http://localhost:4173",
+    "tunnel:backend:prod": "cd server && npm start & cloudflared tunnel --url http://localhost:3001",
+    "clean": "npm run clean:frontend && npm run clean:backend",
+    "clean:frontend": "cd react && npm run clean",
+    "clean:backend": "cd server && rm -rf dist",
+    "deploy": "npm run build:all && echo 'Ready for deployment. Use cloudflared tunnel commands above.'"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "monorepo",
+    "fps",
+    "multiplayer",
+    "react",
+    "node.js",
+    "socket.io",
+    "raycasting",
+    "cloudflared"
+  ],
+  "author": "AidanTheBandit",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AidanTheBandit/FPS-WSS-R1.git"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
+  }
+}
