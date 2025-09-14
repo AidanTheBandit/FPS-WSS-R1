@@ -254,7 +254,7 @@ export class NetworkManager {
 
   handlePlayerBullet(bulletData) {
     // Add bullet to game engine for rendering
-    if (this.gameEngine.bullets) {
+    if (this.gameEngine && this.gameEngine.bullets && Array.isArray(this.gameEngine.bullets)) {
       // Only add if it's not from the local player (local bullets are handled locally)
       if (bulletData.playerId !== this.localPlayerId) {
         const bulletSpeed = 2.0; // Match local bullet speed

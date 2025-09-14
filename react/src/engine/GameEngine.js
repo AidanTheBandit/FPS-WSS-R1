@@ -228,9 +228,22 @@ export class GameEngine {
   }
 
   updateBullets(deltaTime) {
+    // Ensure bullets array exists
+    if (!this.bullets || !Array.isArray(this.bullets)) {
+      console.warn('Bullets array is not initialized');
+      this.bullets = [];
+      return;
+    }
+
     // Update bullet positions and check for collisions
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const bullet = this.bullets[i];
+
+      // Skip invalid bullets
+      if (!bullet) {
+        this.bullets.splice(i, 1);
+        continue;
+      }
 
       // Store previous position for trail
       const prevX = bullet.x;
@@ -404,9 +417,12 @@ export class GameEngine {
         trail: [] // Store trail positions for visual effect
       };
 
-      this.bullets.push(bullet);
+      // Ensure bullets array exists
+      if (!this.bullets) {
+        this.bullets = [];
+      }
 
-      // Send shoot event to server for multiplayer logic
+      this.bullets.push(bullet);
       if (this.networkManager.isConnected()) {
         this.networkManager.sendPlayerShoot(this.player.angle);
       } else {
