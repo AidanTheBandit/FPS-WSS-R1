@@ -72,7 +72,7 @@ Rabbit-Raycast is a from-scratch implementation of classic 3D raycasting technol
    ```
 
 3. **Connect Multiple Clients**
-   - Open multiple browser tabs/windows to `http://localhost:5173`
+   - Open multiple browser tabs/windows to `http://localhost:5642`
    - Each client will automatically connect to the server
    - Players can see each other and engage in combat
 

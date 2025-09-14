@@ -6,10 +6,20 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5642,
-    host: true
+    host: true,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      'rfpsgame.boondit.site'
+    ]
   },
   preview: {
     port: 5642,
-    host: true
+    host: true,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      'rfpsgame.boondit.site'
+    ]
   }
 })

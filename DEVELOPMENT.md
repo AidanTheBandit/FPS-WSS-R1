@@ -44,7 +44,7 @@ This will start Vite's development server with hot reloading.
 
 ### 4. Open in Browser
 
-Navigate to `http://localhost:5173` (or the port shown in terminal).
+Navigate to `http://localhost:5642` (or the port shown in terminal).
 
 ## Project Structure
 

@@ -78,7 +78,7 @@ For detailed engine documentation, see [ENGINE.md](docs/ENGINE.md).
 
 4. **Open in browser**
    ```
-   http://localhost:5173
+   http://localhost:5642
    ```
 
 ### Build for Production
