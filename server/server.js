@@ -31,16 +31,6 @@ if (isProduction) {
   });
 }
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    players: players.size,
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
 // Simple CORS middleware for same-origin requests
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
@@ -157,15 +147,25 @@ function createPlayer(socketId) {
 io.on('connection', (socket) => {
   console.log(`Player connected: ${socket.id}`);
 
-  // Create new player
-  const player = createPlayer(socket.id);
-  players.set(socket.id, player);
+  // Check if player already exists (reconnection)
+  let player = players.get(socket.id);
+  if (player) {
+    // Reconnecting player - just mark as connected
+    player.connected = true;
+    player.lastUpdate = Date.now();
+    console.log(`Player ${socket.id} reconnected`);
+  } else {
+    // Create new player
+    player = createPlayer(socket.id);
+    players.set(socket.id, player);
+    console.log(`New player ${socket.id} created`);
+  }
 
-  console.log(`Total players now: ${players.size}`);
+  console.log(`Total connected players: ${Array.from(players.values()).filter(p => p.connected).length}`);
 
   // Send current game state to new player
   socket.emit('gameState', {
-    players: Array.from(players.values()),
+    players: Array.from(players.values()).filter(p => p.connected),
     gameState: gameState
   });
 
@@ -208,8 +208,9 @@ io.on('connection', (socket) => {
     const shooterY = player.y;
 
     // Check for hits on other players with line of sight
-    players.forEach((targetPlayer, targetId) => {
-      if (targetId === socket.id || !targetPlayer.connected) return;
+    const connectedPlayers = Array.from(players.values()).filter(p => p.connected);
+    connectedPlayers.forEach((targetPlayer) => {
+      if (targetPlayer.id === socket.id) return;
 
       const dx = targetPlayer.x - shooterX;
       const dy = targetPlayer.y - shooterY;
@@ -226,14 +227,14 @@ io.on('connection', (socket) => {
 
           if (rayDistance >= distance) {
             // Hit! No wall blocking the shot
-            console.log(`Player ${socket.id} hit ${targetId}`);
+            console.log(`Player ${socket.id} hit ${targetPlayer.id}`);
             targetPlayer.health -= GAME_CONSTANTS.SHOOT_DAMAGE;
             player.score += 100;
 
             // Broadcast hit
             io.emit('playerHit', {
               shooterId: socket.id,
-              targetId: targetId,
+              targetId: targetPlayer.id,
               damage: GAME_CONSTANTS.SHOOT_DAMAGE,
               newHealth: targetPlayer.health
             });
@@ -242,7 +243,7 @@ io.on('connection', (socket) => {
             if (targetPlayer.health <= 0) {
               targetPlayer.health = 0;
               io.emit('playerDied', {
-                playerId: targetId,
+                playerId: targetPlayer.id,
                 killerId: socket.id
               });
             }
@@ -278,30 +279,38 @@ io.on('connection', (socket) => {
     if (player) {
       player.connected = false;
       socket.broadcast.emit('playerLeft', socket.id);
-      console.log(`Total players now: ${players.size - 1}`);
 
-      // Remove player after delay to allow reconnection
-      setTimeout(() => {
-        if (!player.connected) {
-          players.delete(socket.id);
-          console.log(`Player ${socket.id} removed from game`);
-        }
-      }, 5000);
+      // Remove player immediately instead of waiting
+      players.delete(socket.id);
+      console.log(`Player ${socket.id} removed immediately`);
+      console.log(`Total connected players: ${Array.from(players.values()).filter(p => p.connected).length}`);
     }
   });
 });
 
 // Basic health check endpoint
 app.get('/health', (req, res) => {
+  const connectedPlayers = Array.from(players.values()).filter(p => p.connected);
   res.json({
     status: 'ok',
-    players: players.size,
+    players: connectedPlayers.length,
     timestamp: new Date().toISOString()
   });
 });
 
-// Start server
-const PORT = process.env.PORT || 5462;
+// Periodic cleanup of disconnected players (safety net)
+setInterval(() => {
+  const beforeCount = players.size;
+  for (const [socketId, player] of players) {
+    if (!player.connected) {
+      players.delete(socketId);
+    }
+  }
+  const afterCount = players.size;
+  if (beforeCount !== afterCount) {
+    console.log(`Cleaned up ${beforeCount - afterCount} disconnected players`);
+  }
+}, 30000); // Run every 30 seconds
 server.listen(PORT, () => {
   console.log(`🚀 Multiplayer FPS server running on port ${PORT}`);
   console.log(`📱 Frontend: http://localhost:${PORT} (served by Express)`);
