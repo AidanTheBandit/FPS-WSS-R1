@@ -5,22 +5,9 @@ const path = require('path');
 
 const app = express();
 
-// CORS middleware for Express
+// Simple CORS middleware for same-origin requests
 app.use((req, res, next) => {
-  const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [
-    "http://localhost:5642",
-    "https://localhost:5642",
-    "http://127.0.0.1:5642",
-    "https://127.0.0.1:5642",
-    "https://rfpsgame.boondit.site",
-    "http://rfpsgame.boondit.site"
-  ];
-
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-  }
-
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
@@ -35,14 +22,7 @@ app.use((req, res, next) => {
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [
-      "http://localhost:5642",
-      "https://localhost:5642",
-      "http://127.0.0.1:5642",
-      "https://127.0.0.1:5642",
-      "https://rfpsgame.boondit.site",
-      "http://rfpsgame.boondit.site"
-    ],
+    origin: true, // Allow same origin
     methods: ["GET", "POST"],
     credentials: true
   }

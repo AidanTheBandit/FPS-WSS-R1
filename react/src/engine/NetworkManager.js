@@ -7,17 +7,8 @@ export class NetworkManager {
     this.connected = false;
     this.players = new Map();
     this.localPlayerId = null;
-    // Determine server URL based on current location
-    const currentHost = window.location.host;
-    const currentProtocol = window.location.protocol;
-
-    // If we're on a custom domain (not localhost), connect to the same domain
-    if (currentHost.includes('boondit.site') || (!currentHost.includes('localhost') && !currentHost.includes('127.0.0.1'))) {
-      this.serverUrl = `${currentProtocol}//${currentHost}`;
-    } else {
-      // For local development, use localhost
-      this.serverUrl = 'http://localhost:5642';
-    }
+    // Server is always on the same domain - no CORS needed
+    this.serverUrl = window.location.origin;
 
     this.pendingMoves = [];
     this.lastSentPosition = { x: 0, y: 0, angle: 0 };

@@ -36,13 +36,11 @@ module.exports = {
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
-        PORT: 5642,
-        CORS_ORIGINS: 'https://rfpsgame.boondit.site,http://rfpsgame.boondit.site,http://localhost:5642,https://localhost:5642'
+        PORT: 5642
       },
       env_development: {
         NODE_ENV: 'development',
-        PORT: 5642,
-        CORS_ORIGINS: 'http://localhost:5642,https://localhost:5642,http://127.0.0.1:5642,https://127.0.0.1:5642'
+        PORT: 5642
       },
       error_file: './logs/backend-error.log',
       out_file: './logs/backend-out.log',
