@@ -58,20 +58,20 @@ export class InputHandler {
     const moveSpeed = GAME_CONSTANTS.MOVE_SPEED;
     const turnSpeed = GAME_CONSTANTS.TURN_SPEED;
 
-    // Movement - W/S for forward/backward
+    // Movement - W/S for forward/backward relative to facing direction
     if (this.keys.w || this.keys.ArrowUp) {
-      this.movePlayer(0, -moveSpeed);
+      this.movePlayerRelative(0, -moveSpeed); // Forward
     }
     if (this.keys.s || this.keys.ArrowDown) {
-      this.movePlayer(0, moveSpeed);
+      this.movePlayerRelative(0, moveSpeed); // Backward
     }
 
-    // Camera turning - A/D for left/right rotation
+    // Strafing - A/D for left/right relative to facing direction
     if (this.keys.a || this.keys.ArrowLeft) {
-      this.gameEngine.player.rotate(-turnSpeed);
+      this.movePlayerRelative(-moveSpeed, 0); // Strafe left
     }
     if (this.keys.d || this.keys.ArrowRight) {
-      this.gameEngine.player.rotate(turnSpeed);
+      this.movePlayerRelative(moveSpeed, 0); // Strafe right
     }
 
     // Shooting - Spacebar
@@ -80,9 +80,18 @@ export class InputHandler {
     }
   }
 
-  movePlayer(dx, dy) {
-    const newX = this.gameEngine.player.x + dx;
-    const newY = this.gameEngine.player.y + dy;
+  movePlayerRelative(dx, dy) {
+    // Convert relative movement to world coordinates based on player angle
+    const angle = this.gameEngine.player.angle;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+
+    // Rotate the movement vector by the player's angle
+    const worldDx = dx * cos - dy * sin;
+    const worldDy = dx * sin + dy * cos;
+
+    const newX = this.gameEngine.player.x + worldDx;
+    const newY = this.gameEngine.player.y + worldDy;
 
     if (this.gameEngine.isValidPosition(newX, newY)) {
       this.gameEngine.player.x = newX;

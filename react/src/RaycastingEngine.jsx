@@ -47,10 +47,32 @@ const RaycastingEngine = () => {
 
     initEngine();
 
+    // Add mouse wheel support for camera turning
+    const handleWheel = (event) => {
+      event.preventDefault();
+      if (engineRef.current && engineRef.current.inputHandler) {
+        const turnAmount = event.deltaY > 0 ? 0.1 : -0.1; // Adjust sensitivity
+        engineRef.current.player.rotate(turnAmount);
+      }
+    };
+
+    // Add keyboard shortcuts
+    const handleKeyDown = (event) => {
+      // Toggle strafe mode with Shift key
+      if (event.key === 'Shift') {
+        setStrafeMode(prev => !prev);
+      }
+    };
+
+    document.addEventListener('wheel', handleWheel, { passive: false });
+    document.addEventListener('keydown', handleKeyDown);
+
     return () => {
       if (engineRef.current) {
         engineRef.current.stop();
       }
+      document.removeEventListener('wheel', handleWheel);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -63,6 +85,8 @@ const RaycastingEngine = () => {
     setJoystickState(prev => ({
       ...prev,
       active: true,
+      startX: x,
+      startY: y,
       currentX: x,
       currentY: y
     }));
@@ -76,15 +100,15 @@ const RaycastingEngine = () => {
     const x = event.touches ? event.touches[0].clientX - rect.left : event.clientX - rect.left;
     const y = event.touches ? event.touches[0].clientY - rect.top : event.clientY - rect.top;
 
-    // Calculate distance from center
-    const centerX = 60; // Center of 120px base
+    // Calculate distance from center (60, 60 for 120px base)
+    const centerX = 60;
     const centerY = 60;
     const deltaX = x - centerX;
     const deltaY = y - centerY;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
     // Limit to joystick base radius
-    const maxDistance = joystickState.maxDistance;
+    const maxDistance = 40; // Smaller than 50 to stay within visual base
     const clampedX = distance > maxDistance ? (deltaX / distance) * maxDistance : deltaX;
     const clampedY = distance > maxDistance ? (deltaY / distance) * maxDistance : deltaY;
 
@@ -165,7 +189,7 @@ const RaycastingEngine = () => {
   };
 
   const handleStrafeToggle = () => {
-    setStrafeMode(!strafeMode);
+    setStrafeMode(prev => !prev);
   };
 
   return (
@@ -195,6 +219,9 @@ const RaycastingEngine = () => {
           <div className="ammo">Ammo: {gameState.ammo}</div>
           <div className="score">Score: {gameState.score}</div>
           <div className="level">Level: {gameState.level}</div>
+          <div className="controls-hint">
+            WASD: Move | Mouse wheel: Turn | Shift: Toggle strafe | Space: Shoot
+          </div>
         </div>
 
         <div className="touch-controls">
@@ -231,6 +258,8 @@ const RaycastingEngine = () => {
             </div>
             <div className="joystick-label">
               {strafeMode ? 'STRAFE MODE' : 'MOVE & TURN'}
+              <br />
+              <small>Shift to toggle</small>
             </div>
           </div>
 
