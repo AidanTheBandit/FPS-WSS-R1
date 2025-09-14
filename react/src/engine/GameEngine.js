@@ -83,7 +83,7 @@ export class GameEngine {
     const deltaTime = currentTime - this.lastTime;
     if (deltaTime >= this.frameInterval) {
       this.update(deltaTime);
-      this.renderer.render();
+      this.renderer.render(this.getSceneData());
       this.lastTime = currentTime;
     }
     requestAnimationFrame(time => this.gameLoop(time));
@@ -222,5 +222,20 @@ export class GameEngine {
       this.player.y = 2 + Math.random() * 6;
       this.gameState = 'playing';
     }
+  }
+
+  getSceneData() {
+    return {
+      player: this.player,
+      enemies: this.enemies,
+      map: this.map,
+      rayCount: this.rayCount,
+      fov: this.fov,
+      maxDepth: this.maxDepth,
+      width: this.width,
+      height: this.height,
+      currentLevel: this.currentLevel,
+      gameState: this.gameState
+    };
   }
 }
