@@ -100,11 +100,12 @@ export class Renderer {
       });
     }
 
-    // Add bullets to render queue
-    if (bullets && Array.isArray(bullets)) {
-      bullets.forEach((bullet, index) => {
-        const dx = bullet.x - player.x;
-        const dy = bullet.y - player.y;
+    // Add remote players to render queue
+    if (this.engine.networkManager) {
+      const remotePlayers = this.engine.networkManager.getRemotePlayers();
+      remotePlayers.forEach(remotePlayer => {
+        const dx = remotePlayer.x - player.x;
+        const dy = remotePlayer.y - player.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         // Calculate angle relative to player
@@ -115,49 +116,16 @@ export class Renderer {
         while (normalizedAngle > Math.PI) normalizedAngle -= 2 * Math.PI;
         while (normalizedAngle < -Math.PI) normalizedAngle += 2 * Math.PI;
 
-        // Check if bullet is in field of view
+        // Check if player is in field of view
         if (Math.abs(normalizedAngle) < fov / 2) {
           // Check line of sight (not behind walls)
           const rayDistance = this.castRay(player.x, player.y, Math.atan2(dy, dx), map, maxDepth);
           if (rayDistance >= distance) {
             renderQueue.push({
-              type: 'bullet',
-              bullet: bullet,
+              type: 'player',
+              player: remotePlayer,
               distance: distance,
-              angle: normalizedAngle,
-              index: index
-            });
-          }
-        }
-      });
-    }
-
-    // Add bullets to render queue
-    if (bullets && Array.isArray(bullets)) {
-      bullets.forEach((bullet, index) => {
-        const dx = bullet.x - player.x;
-        const dy = bullet.y - player.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        // Calculate angle relative to player
-        const angle = Math.atan2(dy, dx) - player.angle;
-
-        // Normalize angle to -PI to PI
-        let normalizedAngle = angle;
-        while (normalizedAngle > Math.PI) normalizedAngle -= 2 * Math.PI;
-        while (normalizedAngle < -Math.PI) normalizedAngle += 2 * Math.PI;
-
-        // Check if bullet is in field of view
-        if (Math.abs(normalizedAngle) < fov / 2) {
-          // Check line of sight (not behind walls)
-          const rayDistance = this.castRay(player.x, player.y, Math.atan2(dy, dx), map, maxDepth);
-          if (rayDistance >= distance) {
-            renderQueue.push({
-              type: 'bullet',
-              bullet: bullet,
-              distance: distance,
-              angle: normalizedAngle,
-              index: index
+              angle: normalizedAngle
             });
           }
         }
