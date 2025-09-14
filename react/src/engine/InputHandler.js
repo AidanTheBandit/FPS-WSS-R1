@@ -114,38 +114,52 @@ export class InputHandler {
     if (!this.joystickState.active) return;
 
     const { x, y } = this.joystickState;
-    const deadzone = 0.2;
-    const moveSpeed = GAME_CONSTANTS.MOVE_SPEED;
-    const turnSpeed = GAME_CONSTANTS.TURN_SPEED;
+    const deadzone = 0.15; // Smaller deadzone for more precision
+    const sensitivity = 0.3; // Reduce sensitivity for touch controls
+    const moveSpeed = GAME_CONSTANTS.MOVE_SPEED * sensitivity;
+    const turnSpeed = GAME_CONSTANTS.TURN_SPEED * sensitivity;
     const dt = deltaTime / 16.67; // Normalize to ~60fps
 
+    // Apply exponential scaling for better control at low speeds
+    const applySensitivity = (value) => {
+      const absValue = Math.abs(value);
+      if (absValue < deadzone) return 0;
+      // Apply exponential curve for better low-speed control
+      const normalizedValue = (absValue - deadzone) / (1 - deadzone);
+      const scaledValue = Math.pow(normalizedValue, 1.5) * Math.sign(value);
+      return Math.max(-1, Math.min(1, scaledValue));
+    };
+
+    const scaledX = applySensitivity(x);
+    const scaledY = applySensitivity(y);
+
     // Direct movement based on joystick position
-    if (Math.abs(y) > deadzone) {
-      if (y > 0) {
+    if (Math.abs(scaledY) > 0.01) {
+      if (scaledY > 0) {
         // Forward movement - use same logic as W key
-        this.movePlayerRelative(0, moveSpeed * dt);
+        this.movePlayerRelative(0, moveSpeed * dt * Math.abs(scaledY));
       } else {
-        // Backward movement - use same logic as S key  
-        this.movePlayerRelative(0, -moveSpeed * dt);
+        // Backward movement - use same logic as S key
+        this.movePlayerRelative(0, -moveSpeed * dt * Math.abs(scaledY));
       }
     }
 
-    if (Math.abs(x) > deadzone) {
+    if (Math.abs(scaledX) > 0.01) {
       if (this.gameEngine.strafeMode) {
         // Strafe mode
-        if (x < 0) {
+        if (scaledX < 0) {
           // Strafe left - use same logic as Q key
-          this.movePlayerRelative(-moveSpeed * dt, 0);
+          this.movePlayerRelative(-moveSpeed * dt * Math.abs(scaledX), 0);
         } else {
           // Strafe right - use same logic as E key
-          this.movePlayerRelative(moveSpeed * dt, 0);
+          this.movePlayerRelative(moveSpeed * dt * Math.abs(scaledX), 0);
         }
       } else {
         // Normal mode - turn camera
-        if (x < 0) {
-          this.gameEngine.player.rotate(-turnSpeed * dt);
+        if (scaledX < 0) {
+          this.gameEngine.player.rotate(-turnSpeed * dt * Math.abs(scaledX));
         } else {
-          this.gameEngine.player.rotate(turnSpeed * dt);
+          this.gameEngine.player.rotate(turnSpeed * dt * Math.abs(scaledX));
         }
       }
     }
