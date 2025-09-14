@@ -33,8 +33,8 @@ npm run install:server         # Backend dependencies
 ```bash
 # Start both frontend and backend in development mode
 npm start
-# Frontend: http://localhost:5173
-# Backend: http://localhost:3001
+# Frontend: http://localhost:5642
+# Backend: http://localhost:5642
 
 # Start with Cloudflare tunnels
 npm run tunnel

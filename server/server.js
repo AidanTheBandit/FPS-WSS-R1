@@ -239,7 +239,7 @@ io.on('connection', (socket) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5642;
 server.listen(PORT, () => {
   console.log(`Multiplayer FPS server running on port ${PORT}`);
 });

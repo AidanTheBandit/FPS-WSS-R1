@@ -8,11 +8,11 @@ module.exports = {
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
-        PORT: 4173
+        PORT: 5642
       },
       env_development: {
         NODE_ENV: 'development',
-        PORT: 5173
+        PORT: 5642
       },
       error_file: './logs/frontend-error.log',
       out_file: './logs/frontend-out.log',
@@ -36,11 +36,11 @@ module.exports = {
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
-        PORT: 3001
+        PORT: 5642
       },
       env_development: {
         NODE_ENV: 'development',
-        PORT: 3001
+        PORT: 5642
       },
       error_file: './logs/backend-error.log',
       out_file: './logs/backend-out.log',
