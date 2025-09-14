@@ -537,9 +537,17 @@ export class GameEngine {
 
       console.log(`Player respawned at (${spawnX.toFixed(2)}, ${spawnY.toFixed(2)}) with ${this.player.invincibleTimer}ms invincibility`);
 
-      // Update game state immediately
+      // Update game state immediately and force a render
       this.gameStateManager.updateHealth(this.player.health);
       this.gameStateManager.updateAmmo(this.player.ammo);
+      this.gameStateManager.updateLevel(this.currentLevel);
+
+      // Ensure input handler is ready
+      if (this.inputHandler) {
+        console.log('Input handler is active after respawn');
+        // Reset joystick state to prevent stuck inputs
+        this.inputHandler.setJoystickState(false, 0, 0);
+      }
     }
   }
 

@@ -57,23 +57,23 @@ const RaycastingEngine = () => {
       }
     };
 
-    // Add keyboard shortcuts
-    const handleKeyDown = (event) => {
-      // Toggle strafe mode with Shift key
-      if (event.key === 'Shift') {
-        setStrafeMode(prev => !prev);
-      }
-    };
+    // Add keyboard shortcuts (removed strafe toggle)
+    // const handleKeyDown = (event) => {
+    //   // Toggle strafe mode with Shift key
+    //   if (event.key === 'Shift') {
+    //     setStrafeMode(prev => !prev);
+    //   }
+    // };
 
     document.addEventListener('wheel', handleWheel, { passive: false });
-    document.addEventListener('keydown', handleKeyDown);
+    // document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       if (engineRef.current) {
         engineRef.current.stop();
       }
       document.removeEventListener('wheel', handleWheel);
-      document.removeEventListener('keydown', handleKeyDown);
+      // document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -190,15 +190,7 @@ const RaycastingEngine = () => {
     }
   };
 
-  const handleStrafeToggle = () => {
-    setStrafeMode(prev => {
-      const newMode = !prev;
-      if (engineRef.current) {
-        engineRef.current.strafeMode = newMode;
-      }
-      return newMode;
-    });
-  };
+  // Removed handleStrafeToggle function
 
   return (
     <>
@@ -274,7 +266,7 @@ const RaycastingEngine = () => {
               />
             </div>
             <div className="joystick-label">
-              {strafeMode ? 'STRAFE' : 'MOVE'}
+              MOVE
             </div>
           </div>
 

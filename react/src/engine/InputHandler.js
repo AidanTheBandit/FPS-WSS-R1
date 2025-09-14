@@ -136,8 +136,6 @@ export class InputHandler {
       this.keys.s = false;
       this.keys.a = false;
       this.keys.d = false;
-      this.keys.q = false;
-      this.keys.e = false;
       this.keys.ArrowLeft = false;
       this.keys.ArrowRight = false;
 
