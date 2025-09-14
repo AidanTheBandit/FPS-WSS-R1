@@ -36,6 +36,39 @@ if (isProduction) {
   });
 } else {
   console.log('Running in development mode - React files not served by server');
+
+  // Fallback: serve React files even in development if they exist
+  const reactBuildPath = path.join(__dirname, '../react/dist');
+  if (require('fs').existsSync(reactBuildPath)) {
+    console.log('React build found, serving in development mode');
+    app.use(express.static(reactBuildPath));
+
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/socket.io') || req.path.startsWith('/health')) {
+        return next();
+      }
+      res.sendFile(path.join(reactBuildPath, 'index.html'), (err) => {
+        if (err) {
+          res.status(404).send('React build not found. Please run: npm run build:prod');
+        }
+      });
+    });
+  } else {
+    // No React build found
+    app.get('/', (req, res) => {
+      res.send(`
+        <html>
+          <head><title>FPS Game Server</title></head>
+          <body>
+            <h1>FPS Game Server Running</h1>
+            <p>Server is running but React frontend is not built.</p>
+            <p>To build the frontend, run: <code>npm run build:prod</code></p>
+            <p>Health check: <a href="/health">/health</a></p>
+          </body>
+        </html>
+      `);
+    });
+  }
 }
 
 // Simple CORS middleware for same-origin requests

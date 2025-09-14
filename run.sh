@@ -18,8 +18,10 @@ fi
 # Build React frontend
 echo "Building React frontend..."
 cd react
-npm run build:prod
-if [ $? -ne 0 ]; then
+if npm run build:prod; then
+    echo "✅ Frontend build completed successfully"
+    ls -la dist/
+else
     echo "❌ Frontend build failed!"
     exit 1
 fi
@@ -33,6 +35,13 @@ pm2 delete fps-server 2>/dev/null || true
 # Start the server with PM2
 echo "Starting server with PM2..."
 cd server
+
+# Create a simple environment check
+echo "Environment check:"
+echo "NODE_ENV: $NODE_ENV"
+echo "PORT: $PORT"
+
+# Start with explicit environment variables
 NODE_ENV=production PORT=5462 pm2 start server.js --name fps-server
 
 # Wait a moment for the server to start
