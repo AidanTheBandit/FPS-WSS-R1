@@ -255,8 +255,18 @@ io.on('connection', (socket) => {
   });
 });
 
+// Basic health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    players: players.size,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Start server
 const PORT = process.env.PORT || 5642;
 server.listen(PORT, () => {
   console.log(`Multiplayer FPS server running on port ${PORT}`);
+  console.log(`Socket.IO available at: ws://localhost:${PORT}/server`);
 });
