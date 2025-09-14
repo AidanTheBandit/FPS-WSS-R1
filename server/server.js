@@ -74,6 +74,15 @@ function castRay(originX, originY, angle, maxDepth = 20) {
   return maxDepth;
 }
 
+function isValidPosition(x, y) {
+  const mapX = Math.floor(x);
+  const mapY = Math.floor(y);
+  if (mapX < 0 || mapX >= MAP[0].length || mapY < 0 || mapY >= MAP.length) {
+    return false;
+  }
+  return MAP[mapY][mapX] === 0;
+}
+
 function generatePlayerId() {
   return Math.random().toString(36).substr(2, 9);
 }

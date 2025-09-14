@@ -124,7 +124,7 @@ const RaycastingEngine = () => {
     // Update movement based on joystick position
     if (engineRef.current && engineRef.current.inputHandler) {
       const normalizedX = clampedX / maxDistance;
-      const normalizedY = clampedY / maxDistance;
+      const normalizedY = -clampedY / maxDistance; // Invert Y so up is positive
 
       // Set joystick state directly
       engineRef.current.inputHandler.setJoystickState(true, normalizedX, normalizedY);

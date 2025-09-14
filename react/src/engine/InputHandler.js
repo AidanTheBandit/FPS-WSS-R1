@@ -117,7 +117,7 @@ export class InputHandler {
       // Turning or strafing based on strafe mode
       if (this.gameEngine.strafeMode) {
         // Strafe left/right
-        this.movePlayerRelative(-x * moveSpeed, 0);
+        this.movePlayerRelative(x * moveSpeed, 0);
       } else {
         // Turn camera left/right
         this.gameEngine.player.rotate(x * turnSpeed);
