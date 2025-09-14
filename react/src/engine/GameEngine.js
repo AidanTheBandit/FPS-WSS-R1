@@ -28,6 +28,7 @@ export class GameEngine {
     this.currentLevel = 1;
     this.gameState = 'playing'; // 'menu', 'playing', 'levelComplete', 'gameOver'
     this.score = 0;
+    this.strafeMode = false;
 
     // Initialize components
     this.levelManager = new LevelManager();

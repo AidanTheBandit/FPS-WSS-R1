@@ -126,37 +126,8 @@ const RaycastingEngine = () => {
       const normalizedX = clampedX / maxDistance;
       const normalizedY = clampedY / maxDistance;
 
-      // Clear all movement keys first
-      const keys = engineRef.current.inputHandler.keys;
-      keys.w = false;
-      keys.s = false;
-      keys.a = false;
-      keys.d = false;
-      keys.ArrowLeft = false;
-      keys.ArrowRight = false;
-
-      // Set movement based on joystick position
-      if (strafeMode) {
-        // Strafe mode: X = strafe left/right, Y = forward/backward
-        if (Math.abs(normalizedY) > 0.2) {
-          keys.w = normalizedY < 0; // Forward
-          keys.s = normalizedY > 0; // Backward
-        }
-        if (Math.abs(normalizedX) > 0.2) {
-          keys.a = normalizedX < 0; // Strafe left
-          keys.d = normalizedX > 0; // Strafe right
-        }
-      } else {
-        // Normal mode: Y = forward/backward, X = turn left/right
-        if (Math.abs(normalizedY) > 0.2) {
-          keys.w = normalizedY < 0; // Forward
-          keys.s = normalizedY > 0; // Backward
-        }
-        if (Math.abs(normalizedX) > 0.2) {
-          keys.ArrowLeft = normalizedX < 0; // Turn left
-          keys.ArrowRight = normalizedX > 0; // Turn right
-        }
-      }
+      // Set joystick state directly
+      engineRef.current.inputHandler.setJoystickState(true, normalizedX, normalizedY);
     }
   };
 
@@ -171,13 +142,8 @@ const RaycastingEngine = () => {
 
     // Stop all movement
     if (engineRef.current && engineRef.current.inputHandler) {
-      const keys = engineRef.current.inputHandler.keys;
-      keys.w = false;
-      keys.s = false;
-      keys.a = false;
-      keys.d = false;
-      keys.ArrowLeft = false;
-      keys.ArrowRight = false;
+      // Deactivate joystick
+      engineRef.current.inputHandler.setJoystickState(false, 0, 0);
     }
   };
 
@@ -189,7 +155,13 @@ const RaycastingEngine = () => {
   };
 
   const handleStrafeToggle = () => {
-    setStrafeMode(prev => !prev);
+    setStrafeMode(prev => {
+      const newMode = !prev;
+      if (engineRef.current) {
+        engineRef.current.strafeMode = newMode;
+      }
+      return newMode;
+    });
   };
 
   return (
@@ -248,9 +220,7 @@ const RaycastingEngine = () => {
               />
             </div>
             <div className="joystick-label">
-              {strafeMode ? 'STRAFE MODE' : 'MOVE & TURN'}
-              <br />
-              <small>Shift to toggle</small>
+              {strafeMode ? 'STRAFE' : 'MOVE'}
             </div>
           </div>
 

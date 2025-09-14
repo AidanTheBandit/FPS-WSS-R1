@@ -8,6 +8,8 @@ export class InputHandler {
       a: false,
       s: false,
       d: false,
+      q: false,
+      e: false,
       ArrowUp: false,
       ArrowDown: false,
       ArrowLeft: false,
@@ -22,6 +24,12 @@ export class InputHandler {
       turnLeft: false,
       turnRight: false,
       strafe: false
+    };
+
+    this.joystickState = {
+      active: false,
+      x: 0, // -1 to 1
+      y: 0  // -1 to 1
     };
 
     this.setupKeyboardListeners();
@@ -52,6 +60,9 @@ export class InputHandler {
   update(deltaTime) {
     // Handle keyboard input
     this.handleKeyboardInput(deltaTime);
+    
+    // Handle joystick input
+    this.handleJoystickInput(deltaTime);
   }
 
   handleKeyboardInput(deltaTime) {
@@ -66,17 +77,51 @@ export class InputHandler {
       this.movePlayerRelative(0, moveSpeed); // Backward
     }
 
-    // Strafing - A/D for left/right relative to facing direction
+    // Camera turning - A/D for left/right camera rotation
     if (this.keys.a || this.keys.ArrowLeft) {
-      this.movePlayerRelative(-moveSpeed, 0); // Strafe left
+      this.gameEngine.player.rotate(-turnSpeed); // Turn left
     }
     if (this.keys.d || this.keys.ArrowRight) {
+      this.gameEngine.player.rotate(turnSpeed); // Turn right
+    }
+
+    // Strafing - Q/E for left/right movement (used in strafe mode)
+    if (this.keys.q) {
+      this.movePlayerRelative(-moveSpeed, 0); // Strafe left
+    }
+    if (this.keys.e) {
       this.movePlayerRelative(moveSpeed, 0); // Strafe right
     }
 
     // Shooting - Spacebar
     if (this.keys[' ']) {
       this.gameEngine.shoot();
+    }
+  }
+
+  handleJoystickInput(deltaTime) {
+    if (!this.joystickState.active) return;
+
+    const moveSpeed = GAME_CONSTANTS.MOVE_SPEED;
+    const turnSpeed = GAME_CONSTANTS.TURN_SPEED;
+
+    const { x, y } = this.joystickState;
+
+    // Movement based on joystick position
+    if (Math.abs(y) > 0.1) {
+      // Forward/backward movement relative to camera direction
+      this.movePlayerRelative(0, -y * moveSpeed);
+    }
+
+    if (Math.abs(x) > 0.1) {
+      // Turning or strafing based on strafe mode
+      if (this.gameEngine.strafeMode) {
+        // Strafe left/right
+        this.movePlayerRelative(-x * moveSpeed, 0);
+      } else {
+        // Turn camera left/right
+        this.gameEngine.player.rotate(x * turnSpeed);
+      }
     }
   }
 
@@ -148,6 +193,12 @@ export class InputHandler {
         this.touchState.turnRight = false;
         break;
     }
+  }
+
+  setJoystickState(active, x, y) {
+    this.joystickState.active = active;
+    this.joystickState.x = x;
+    this.joystickState.y = y;
   }
 
   cleanup() {
