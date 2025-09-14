@@ -110,7 +110,14 @@ export class NetworkManager {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
-      this.connected = false;
+    }
+    this.connected = false;
+    this.connectionAttempts = 0;
+
+    // Clear any pending reconnect timers
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
     }
   }
 
@@ -225,6 +232,22 @@ export class NetworkManager {
   }
 
   isConnected() {
-    return this.connected;
+    return this.connected && this.socket && this.socket.connected;
+  }
+
+  retryConnection() {
+    console.log('Manually retrying connection...');
+    this.disconnect();
+    setTimeout(() => this.connect(), 500);
+  }
+
+  getConnectionStatus() {
+    return {
+      connected: this.connected,
+      socketConnected: this.socket?.connected || false,
+      serverUrl: this.serverUrl,
+      connectionAttempts: this.connectionAttempts,
+      localPlayerId: this.localPlayerId
+    };
   }
 }

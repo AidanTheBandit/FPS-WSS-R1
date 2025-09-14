@@ -172,8 +172,21 @@ const RaycastingEngine = () => {
 
         {/* Multiplayer HUD */}
         <div className="multiplayer-hud">
-          <div className={`connection-status ${gameState.isConnected ? 'connected' : 'disconnected'}`}>
-            {gameState.isConnected ? '🟢 Online' : '🔴 Offline'}
+          <div
+            className={`connection-status ${gameState.isConnected ? 'connected' : 'disconnected'}`}
+            onClick={() => {
+              if (!gameState.isConnected && engineRef.current?.networkManager) {
+                console.log('Retrying connection...');
+                console.log('Connection status:', engineRef.current.networkManager.getConnectionStatus());
+                engineRef.current.networkManager.retryConnection();
+              } else if (gameState.isConnected && engineRef.current?.networkManager) {
+                console.log('Connection status:', engineRef.current.networkManager.getConnectionStatus());
+              }
+            }}
+            style={{ cursor: gameState.isConnected ? 'default' : 'pointer' }}
+            title={gameState.isConnected ? 'Connected to server' : 'Click to retry connection'}
+          >
+            {gameState.isConnected ? '🟢 Online' : '🔴 Offline (Click to retry)'}
           </div>
           <div className="player-count">
             Players: {gameState.connectedPlayers || 1}
