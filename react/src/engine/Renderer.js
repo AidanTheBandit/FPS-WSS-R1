@@ -48,7 +48,7 @@ export class Renderer {
 
   renderScene(scene) {
     // Get game data from scene
-    const { player, enemies, map, rayCount, fov, maxDepth } = scene;
+    const { player, enemies, bullets, ammoPickups, map, rayCount, fov, maxDepth } = scene;
 
     if (!player || !map || !Array.isArray(map) || map.length === 0) return;
 
@@ -100,6 +100,38 @@ export class Renderer {
       });
     }
 
+    // Add bullets to render queue
+    if (bullets && Array.isArray(bullets)) {
+      bullets.forEach((bullet, index) => {
+        const dx = bullet.x - player.x;
+        const dy = bullet.y - player.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Calculate angle relative to player
+        const angle = Math.atan2(dy, dx) - player.angle;
+
+        // Normalize angle to -PI to PI
+        let normalizedAngle = angle;
+        while (normalizedAngle > Math.PI) normalizedAngle -= 2 * Math.PI;
+        while (normalizedAngle < -Math.PI) normalizedAngle += 2 * Math.PI;
+
+        // Check if bullet is in field of view
+        if (Math.abs(normalizedAngle) < fov / 2) {
+          // Check line of sight (not behind walls)
+          const rayDistance = this.castRay(player.x, player.y, Math.atan2(dy, dx), map, maxDepth);
+          if (rayDistance >= distance) {
+            renderQueue.push({
+              type: 'bullet',
+              bullet: bullet,
+              distance: distance,
+              angle: normalizedAngle,
+              index: index
+            });
+          }
+        }
+      });
+    }
+
     // Add ammo pickups to render queue
     if (scene.ammoPickups && Array.isArray(scene.ammoPickups)) {
       scene.ammoPickups.forEach(pickup => {
@@ -142,6 +174,8 @@ export class Renderer {
         this.renderEnemySprite(item.enemy, item.distance, item.angle, fov);
       } else if (item.type === 'player') {
         this.renderPlayerSprite(item.player, item.distance, item.angle, fov);
+      } else if (item.type === 'bullet') {
+        this.renderBullet(item.bullet, item.distance, item.angle, fov);
       } else if (item.type === 'ammoPickup') {
         this.renderAmmoPickup(item.pickup, item.distance, item.angle, fov);
       }
@@ -278,6 +312,30 @@ export class Renderer {
       pickupSize + 4,
       pickupSize + 4
     );
+    this.ctx.shadowBlur = 0; // Reset shadow
+  }
+
+  renderBullet(bullet, distance, angle, fov) {
+    if (!bullet) return;
+
+    // Calculate screen position
+    const screenX = (angle / (fov / 2)) * (this.width / 2) + this.width / 2;
+    const wallHeight = (this.height / 2) / distance;
+    const bulletSize = Math.max(2, wallHeight * 0.1); // Small bullet size
+    const bulletTop = (this.height / 2) - bulletSize / 2;
+
+    // Draw bullet as a bright yellow/white dot
+    this.ctx.fillStyle = '#ffff00';
+    this.ctx.beginPath();
+    this.ctx.arc(screenX, this.height / 2, bulletSize / 2, 0, 2 * Math.PI);
+    this.ctx.fill();
+
+    // Add glow effect
+    this.ctx.shadowColor = '#ffff00';
+    this.ctx.shadowBlur = 4;
+    this.ctx.beginPath();
+    this.ctx.arc(screenX, this.height / 2, bulletSize, 0, 2 * Math.PI);
+    this.ctx.fill();
     this.ctx.shadowBlur = 0; // Reset shadow
   }
 

@@ -93,24 +93,48 @@ export class GameEngine {
     requestAnimationFrame(time => this.gameLoop(time));
   }
 
-  update(deltaTime) {
-    if (this.gameState !== 'playing') return;
+  updateBullets(deltaTime) {
+    // Update bullet positions and check for collisions
+    for (let i = this.bullets.length - 1; i >= 0; i--) {
+      const bullet = this.bullets[i];
 
-    // Update input
-    this.inputHandler.update(deltaTime);
+      // Update bullet position
+      bullet.x += bullet.velocityX * deltaTime / 16.67; // Normalize to ~60fps
+      bullet.y += bullet.velocityY * deltaTime / 16.67;
 
-    // Update enemies
-    this.enemies.forEach(enemy => enemy.update(deltaTime));
+      // Update lifetime
+      bullet.lifetime -= deltaTime;
 
-    // Send player position to server
-    if (this.networkManager.isConnected()) {
-      this.networkManager.sendPlayerMove(this.player.x, this.player.y, this.player.angle);
+      // Check wall collision
+      const mapX = Math.floor(bullet.x);
+      const mapY = Math.floor(bullet.y);
+      if (mapX < 0 || mapX >= this.mapWidth || mapY < 0 || mapY >= this.mapHeight ||
+          this.map[mapY][mapX] === 1) {
+        this.bullets.splice(i, 1);
+        continue;
+      }
+
+      // Only check enemy collision in single-player mode
+      // In multiplayer, server handles all hit detection
+      if (!this.networkManager.isConnected()) {
+        for (const enemy of this.enemies) {
+          const dx = bullet.x - enemy.x;
+          const dy = bullet.y - enemy.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < 0.5) { // Bullet hit radius
+            enemy.takeDamage(GAME_CONSTANTS.SHOOT_DAMAGE);
+            this.bullets.splice(i, 1);
+            break;
+          }
+        }
+      }
+
+      // Remove old bullets
+      if (bullet.lifetime <= 0) {
+        this.bullets.splice(i, 1);
+      }
     }
-
-    // Update game state
-    this.gameStateManager.updateHealth(this.player.health);
-    this.gameStateManager.updateAmmo(this.player.ammo);
-    this.gameStateManager.updateScore(this.score);
   }
 
   castRay(angle) {
@@ -149,11 +173,22 @@ export class GameEngine {
     if (this.player.shoot() && this.gameState === 'playing') {
       this.renderer.triggerMuzzleFlash();
 
-      // Send shoot event to server
+      // In multiplayer, server handles all shooting logic
       if (this.networkManager.isConnected()) {
         this.networkManager.sendPlayerShoot(this.player.angle);
       } else {
-        // Fallback to single-player mode
+        // Single-player mode: create local bullets
+        const bulletSpeed = 1.0; // Units per frame at 60fps
+        const bullet = {
+          x: this.player.x,
+          y: this.player.y,
+          velocityX: Math.cos(this.player.angle) * bulletSpeed,
+          velocityY: Math.sin(this.player.angle) * bulletSpeed,
+          lifetime: 2000, // 2 seconds
+          playerId: 'local' // For identification
+        };
+
+        this.bullets.push(bullet);
         this.handleLocalShoot();
       }
     }
@@ -242,6 +277,7 @@ export class GameEngine {
     return {
       player: this.player,
       enemies: this.enemies,
+      bullets: this.bullets,
       ammoPickups: Array.from(this.ammoPickups.values()),
       map: this.map,
       rayCount: this.rayCount,

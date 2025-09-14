@@ -332,6 +332,14 @@ io.on('connection', (socket) => {
     console.log(`Player ${socket.id} shooting`);
     player.ammo--;
 
+    // Broadcast bullet creation to all clients
+    io.emit('playerBullet', {
+      playerId: socket.id,
+      x: player.x,
+      y: player.y,
+      angle: data.angle
+    });
+
     // Check for hits on other players
     const { angle } = data;
     const shooterX = player.x;

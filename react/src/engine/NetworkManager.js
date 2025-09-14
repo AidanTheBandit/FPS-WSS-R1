@@ -108,6 +108,10 @@ export class NetworkManager {
     this.socket.on('ammoPickupExpired', (pickupId) => {
       this.handleAmmoPickupExpired(pickupId);
     });
+
+    this.socket.on('playerBullet', (bulletData) => {
+      this.handlePlayerBullet(bulletData);
+    });
   }
 
   disconnect() {
@@ -245,6 +249,25 @@ export class NetworkManager {
     // Remove expired pickup
     if (this.gameEngine.ammoPickups) {
       this.gameEngine.ammoPickups.delete(pickupId);
+    }
+  }
+
+  handlePlayerBullet(bulletData) {
+    // Add bullet to game engine for rendering
+    if (this.gameEngine.bullets) {
+      // Only add if it's not from the local player (local bullets are handled locally)
+      if (bulletData.playerId !== this.localPlayerId) {
+        const bulletSpeed = 1.0;
+        const bullet = {
+          x: bulletData.x,
+          y: bulletData.y,
+          velocityX: Math.cos(bulletData.angle) * bulletSpeed,
+          velocityY: Math.sin(bulletData.angle) * bulletSpeed,
+          lifetime: 2000,
+          playerId: bulletData.playerId
+        };
+        this.gameEngine.bullets.push(bullet);
+      }
     }
   }
 
