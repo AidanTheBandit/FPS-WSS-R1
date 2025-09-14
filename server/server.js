@@ -5,6 +5,43 @@ const path = require('path');
 
 const app = express();
 
+// Serve static files from React build (for production)
+const isProduction = process.env.NODE_ENV === 'production';
+if (isProduction) {
+  const reactBuildPath = path.join(__dirname, '../react/dist');
+  console.log('Serving React build from:', reactBuildPath);
+  app.use(express.static(reactBuildPath));
+
+  // Health check endpoint (before catch-all)
+  app.get('/health', (req, res) => {
+    res.json({
+      status: 'ok',
+      players: players.size,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV
+    });
+  });
+
+  // Serve React app for all non-API routes
+  app.get('*', (req, res) => {
+    // Don't serve React app for Socket.IO paths
+    if (req.path.startsWith('/socket.io')) {
+      return res.status(404).send('Socket.IO endpoint');
+    }
+    res.sendFile(path.join(reactBuildPath, 'index.html'));
+  });
+} else {
+  // Development: just health check
+  app.get('/health', (req, res) => {
+    res.json({
+      status: 'ok',
+      players: players.size,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV
+    });
+  });
+}
+
 // Simple CORS middleware for same-origin requests
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
@@ -267,6 +304,9 @@ app.get('/health', (req, res) => {
 // Start server
 const PORT = process.env.PORT || 5642;
 server.listen(PORT, () => {
-  console.log(`Multiplayer FPS server running on port ${PORT}`);
-  console.log(`Socket.IO available at: ws://localhost:${PORT}/server`);
+  console.log(`🚀 Multiplayer FPS server running on port ${PORT}`);
+  console.log(`📱 Frontend: http://localhost:${PORT} (served by Express)`);
+  console.log(`🔌 Socket.IO: ws://localhost:${PORT}/server`);
+  console.log(`💚 Health check: http://localhost:${PORT}/health`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });

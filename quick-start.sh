@@ -1,6 +1,20 @@
 #!/bin/bash
 
-# Quick start script for FPS-WSS-R1 with Cloudflare tunneling
+# Quick start script for FP# Build the project
+print_status "Building project..."
+npm run build:all
+
+print_success "Build complete!"
+
+# Start with tunnels
+print_status "Starting production server with Cloudflare tunnel..."
+print_status "Frontend: http://localhost:5642 (served by backend)"
+print_status "Backend: ws://localhost:5642/server (Socket.IO)"
+echo ""
+print_warning "Cloudflare tunnel URL will be displayed below:"
+echo ""
+
+npm run tunnel:serverCloudflare tunneling
 echo "🚀 Starting FPS-WSS-R1 with Cloudflare Tunnels"
 echo "=============================================="
 
