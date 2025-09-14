@@ -60,7 +60,8 @@ const players = new Map();
 const gameState = {
   level: 1,
   enemies: [],
-  maxPlayers: 8
+  maxPlayers: 8,
+  ammoPickups: new Map() // Store ammo pickups by ID
 };
 
 // Game constants (mirroring client)
@@ -144,6 +145,89 @@ function createPlayer(socketId) {
   };
 }
 
+function createAmmoPickup() {
+  const id = 'ammo_' + Math.random().toString(36).substr(2, 9);
+  let x, y;
+  let attempts = 0;
+  const maxAttempts = 50;
+
+  // Find a valid position for the ammo pickup
+  do {
+    x = 1 + Math.random() * 14; // Within map bounds
+    y = 1 + Math.random() * 10;
+    attempts++;
+  } while (!isValidPosition(x, y) && attempts < maxAttempts);
+
+  if (attempts >= maxAttempts) {
+    // Fallback to a safe position
+    x = 2 + Math.random() * 6;
+    y = 2 + Math.random() * 6;
+  }
+
+  return {
+    id: id,
+    x: x,
+    y: y,
+    ammoAmount: 25, // Amount of ammo this pickup gives
+    spawnTime: Date.now(),
+    collected: false
+  };
+}
+
+function spawnAmmoPickup() {
+  const pickup = createAmmoPickup();
+  gameState.ammoPickups.set(pickup.id, pickup);
+
+  // Broadcast to all connected players
+  const connectedPlayers = Array.from(players.values()).filter(p => p.connected);
+  connectedPlayers.forEach(player => {
+    const socket = io.sockets.sockets.get(player.id);
+    if (socket) {
+      socket.emit('ammoPickupSpawned', pickup);
+    }
+  });
+
+  console.log(`Ammo pickup spawned at (${pickup.x.toFixed(2)}, ${pickup.y.toFixed(2)})`);
+}
+
+function checkAmmoPickupCollision(player) {
+  const pickupRadius = 0.8; // Collision radius for pickups
+
+  for (const [pickupId, pickup] of gameState.ammoPickups) {
+    if (pickup.collected) continue;
+
+    const dx = player.x - pickup.x;
+    const dy = player.y - pickup.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance <= pickupRadius) {
+      // Player collected the ammo pickup
+      pickup.collected = true;
+      player.ammo += pickup.ammoAmount;
+
+      // Cap ammo at reasonable maximum
+      if (player.ammo > 100) {
+        player.ammo = 100;
+      }
+
+      // Broadcast collection to all players
+      io.emit('ammoPickupCollected', {
+        pickupId: pickupId,
+        playerId: player.id,
+        newAmmo: player.ammo
+      });
+
+      // Remove pickup after a short delay
+      setTimeout(() => {
+        gameState.ammoPickups.delete(pickupId);
+      }, 100);
+
+      console.log(`Player ${player.id} collected ammo pickup, now has ${player.ammo} ammo`);
+      break; // Only allow one pickup per movement
+    }
+  }
+}
+
 io.on('connection', (socket) => {
   console.log(`Player connected: ${socket.id}`);
 
@@ -166,7 +250,10 @@ io.on('connection', (socket) => {
   // Send current game state to new player
   socket.emit('gameState', {
     players: Array.from(players.values()).filter(p => p.connected),
-    gameState: gameState
+    gameState: {
+      ...gameState,
+      ammoPickups: Array.from(gameState.ammoPickups.values()).filter(p => !p.collected)
+    }
   });
 
   // Notify other players of new player
@@ -185,6 +272,9 @@ io.on('connection', (socket) => {
       player.y = y;
       player.angle = angle;
       player.lastUpdate = Date.now();
+
+      // Check for ammo pickup collisions
+      checkAmmoPickupCollision(player);
 
       // Broadcast to other players
       socket.broadcast.emit('playerMoved', {
@@ -267,7 +357,7 @@ io.on('connection', (socket) => {
     player.health = GAME_CONSTANTS.PLAYER_START_HEALTH;
     player.x = 2 + Math.random() * 6;
     player.y = 2 + Math.random() * 6;
-    player.ammo = 50;
+    player.ammo = Math.max(player.ammo, 25); // Ensure at least 25 ammo on respawn
 
     io.emit('playerRespawned', player);
   });
@@ -297,6 +387,45 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Periodic ammo pickup spawning
+setInterval(() => {
+  const connectedPlayers = Array.from(players.values()).filter(p => p.connected);
+  if (connectedPlayers.length > 0) {
+    // Only spawn if there are connected players
+    const activePickups = Array.from(gameState.ammoPickups.values()).filter(p => !p.collected);
+
+    // Maintain 3-5 active pickups
+    const maxPickups = Math.min(5, Math.max(3, connectedPlayers.length));
+    const pickupsToSpawn = maxPickups - activePickups.length;
+
+    for (let i = 0; i < pickupsToSpawn; i++) {
+      spawnAmmoPickup();
+    }
+  }
+}, 15000); // Spawn check every 15 seconds
+
+// Periodic cleanup of old ammo pickups
+setInterval(() => {
+  const now = Date.now();
+  const toRemove = [];
+
+  for (const [pickupId, pickup] of gameState.ammoPickups) {
+    // Remove pickups that are older than 2 minutes
+    if (now - pickup.spawnTime > 120000) {
+      toRemove.push(pickupId);
+    }
+  }
+
+  toRemove.forEach(id => {
+    gameState.ammoPickups.delete(id);
+    io.emit('ammoPickupExpired', id);
+  });
+
+  if (toRemove.length > 0) {
+    console.log(`Expired ${toRemove.length} old ammo pickups`);
+  }
+}, 60000); // Cleanup every minute
 
 // Periodic cleanup of disconnected players (safety net)
 setInterval(() => {

@@ -100,12 +100,11 @@ export class Renderer {
       });
     }
 
-    // Add remote players to render queue
-    if (this.engine.networkManager) {
-      const remotePlayers = this.engine.networkManager.getRemotePlayers();
-      remotePlayers.forEach(remotePlayer => {
-        const dx = remotePlayer.x - player.x;
-        const dy = remotePlayer.y - player.y;
+    // Add ammo pickups to render queue
+    if (scene.ammoPickups && Array.isArray(scene.ammoPickups)) {
+      scene.ammoPickups.forEach(pickup => {
+        const dx = pickup.x - player.x;
+        const dy = pickup.y - player.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         // Calculate angle relative to player
@@ -116,14 +115,14 @@ export class Renderer {
         while (normalizedAngle > Math.PI) normalizedAngle -= 2 * Math.PI;
         while (normalizedAngle < -Math.PI) normalizedAngle += 2 * Math.PI;
 
-        // Check if player is in field of view
+        // Check if pickup is in field of view
         if (Math.abs(normalizedAngle) < fov / 2) {
           // Check line of sight (not behind walls)
           const rayDistance = this.castRay(player.x, player.y, Math.atan2(dy, dx), map, maxDepth);
           if (rayDistance >= distance) {
             renderQueue.push({
-              type: 'player',
-              player: remotePlayer,
+              type: 'ammoPickup',
+              pickup: pickup,
               distance: distance,
               angle: normalizedAngle
             });
@@ -143,6 +142,8 @@ export class Renderer {
         this.renderEnemySprite(item.enemy, item.distance, item.angle, fov);
       } else if (item.type === 'player') {
         this.renderPlayerSprite(item.player, item.distance, item.angle, fov);
+      } else if (item.type === 'ammoPickup') {
+        this.renderAmmoPickup(item.pickup, item.distance, item.angle, fov);
       }
     });
   }
@@ -200,36 +201,52 @@ export class Renderer {
     this.ctx.fillText(player.id.substring(0, 4), screenX, playerTop - 12);
   }
 
-  renderEnemySprite(enemy, distance, angle, fov) {
-    if (!enemy || typeof enemy.health === 'undefined' || typeof enemy.state === 'undefined') return;
+  renderAmmoPickup(pickup, distance, angle, fov) {
+    if (!pickup) return;
 
     // Calculate screen position
     const screenX = (angle / (fov / 2)) * (this.width / 2) + this.width / 2;
     const wallHeight = (this.height / 2) / distance;
-    const enemyHeight = wallHeight * (enemy.size || 0.5);
-    const enemyTop = (this.height / 2) - enemyHeight / 2;
-    const enemyBottom = (this.height / 2) + enemyHeight / 2;
+    const pickupSize = wallHeight * 0.3; // Small pickup size
+    const pickupTop = (this.height / 2) - pickupSize / 2;
+    const pickupBottom = (this.height / 2) + pickupSize / 2;
 
-    // Draw enemy sprite
-    const color = enemy.state === 'chasing' ? GAME_CONSTANTS.ENEMY_COLOR_CHASING : GAME_CONSTANTS.ENEMY_COLOR_IDLE;
-    this.ctx.fillStyle = color;
+    // Draw ammo pickup as a yellow/gold box
+    this.ctx.fillStyle = '#ffdd00';
     this.ctx.fillRect(
-      screenX - enemyHeight / 4,
-      enemyTop,
-      enemyHeight / 2,
-      enemyHeight
+      screenX - pickupSize / 2,
+      pickupTop,
+      pickupSize,
+      pickupSize
     );
 
-    // Draw health bar
-    const barWidth = enemyHeight / 2;
-    const barHeight = 4;
-    const healthPercent = enemy.health / GAME_CONSTANTS.ENEMY_HEALTH;
+    // Add border
+    this.ctx.strokeStyle = '#ffaa00';
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(
+      screenX - pickupSize / 2,
+      pickupTop,
+      pickupSize,
+      pickupSize
+    );
 
+    // Add "AMMO" text
     this.ctx.fillStyle = '#000';
-    this.ctx.fillRect(screenX - barWidth / 2, enemyTop - 8, barWidth, barHeight);
+    this.ctx.font = `${Math.max(6, pickupSize / 3)}px monospace`;
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('A', screenX, pickupTop + pickupSize / 2 + 2);
 
-    this.ctx.fillStyle = healthPercent > 0.5 ? '#0f0' : healthPercent > 0.25 ? '#ff0' : '#f00';
-    this.ctx.fillRect(screenX - barWidth / 2, enemyTop - 8, barWidth * healthPercent, barHeight);
+    // Add subtle glow effect
+    this.ctx.shadowColor = '#ffdd00';
+    this.ctx.shadowBlur = 3;
+    this.ctx.fillStyle = 'rgba(255, 221, 0, 0.3)';
+    this.ctx.fillRect(
+      screenX - pickupSize / 2 - 2,
+      pickupTop - 2,
+      pickupSize + 4,
+      pickupSize + 4
+    );
+    this.ctx.shadowBlur = 0; // Reset shadow
   }
 
   castRay(originX, originY, angle, map, maxDepth) {

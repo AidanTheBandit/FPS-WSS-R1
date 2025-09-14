@@ -40,6 +40,7 @@ export class GameEngine {
     // Game objects
     this.enemies = [];
     this.bullets = [];
+    this.ammoPickups = new Map(); // Store active ammo pickups
 
     // Load first level
     this.loadLevel(this.currentLevel);
@@ -241,6 +242,7 @@ export class GameEngine {
     return {
       player: this.player,
       enemies: this.enemies,
+      ammoPickups: Array.from(this.ammoPickups.values()),
       map: this.map,
       rayCount: this.rayCount,
       fov: this.fov,

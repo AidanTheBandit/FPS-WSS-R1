@@ -96,6 +96,18 @@ export class NetworkManager {
     this.socket.on('playerRespawned', (player) => {
       this.handlePlayerRespawned(player);
     });
+
+    this.socket.on('ammoPickupSpawned', (pickup) => {
+      this.handleAmmoPickupSpawned(pickup);
+    });
+
+    this.socket.on('ammoPickupCollected', (data) => {
+      this.handleAmmoPickupCollected(data);
+    });
+
+    this.socket.on('ammoPickupExpired', (pickupId) => {
+      this.handleAmmoPickupExpired(pickupId);
+    });
   }
 
   disconnect() {
@@ -121,6 +133,16 @@ export class NetworkManager {
         this.players.set(player.id, player);
       }
     });
+
+    // Initialize ammo pickups
+    if (this.gameEngine.ammoPickups) {
+      this.gameEngine.ammoPickups.clear();
+      if (data.gameState && data.gameState.ammoPickups) {
+        data.gameState.ammoPickups.forEach(pickup => {
+          this.gameEngine.ammoPickups.set(pickup.id, pickup);
+        });
+      }
+    }
   }
 
   handlePlayerJoined(player) {
@@ -190,6 +212,39 @@ export class NetworkManager {
       this.gameEngine.gameState = 'playing';
     } else {
       this.players.set(player.id, player);
+    }
+  }
+
+  handleAmmoPickupSpawned(pickup) {
+    // Add pickup to game engine's pickup list
+    if (this.gameEngine.ammoPickups) {
+      this.gameEngine.ammoPickups.set(pickup.id, pickup);
+    }
+  }
+
+  handleAmmoPickupCollected(data) {
+    // Remove pickup from game
+    if (this.gameEngine.ammoPickups) {
+      this.gameEngine.ammoPickups.delete(data.pickupId);
+    }
+
+    // Update player's ammo if it's the local player
+    if (data.playerId === this.localPlayerId) {
+      this.gameEngine.player.ammo = data.newAmmo;
+      this.gameEngine.gameStateManager.updateAmmo(data.newAmmo);
+    } else {
+      // Update remote player's ammo
+      const player = this.players.get(data.playerId);
+      if (player) {
+        player.ammo = data.newAmmo;
+      }
+    }
+  }
+
+  handleAmmoPickupExpired(pickupId) {
+    // Remove expired pickup
+    if (this.gameEngine.ammoPickups) {
+      this.gameEngine.ammoPickups.delete(pickupId);
     }
   }
 
