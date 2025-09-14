@@ -240,13 +240,28 @@ export class Renderer {
     const playerBottom = (this.height / 2) + playerHeight / 2;
 
     // Draw player sprite (different color from enemies)
-    this.ctx.fillStyle = player.health > 50 ? '#0088ff' : player.health > 25 ? '#ff8800' : '#ff4444';
+    let playerColor = player.health > 50 ? '#0088ff' : player.health > 25 ? '#ff8800' : '#ff4444';
+
+    // If invincible, make player glow white/cyan
+    if (player.invincible) {
+      playerColor = '#00ffff';
+      // Add glow effect for invincibility
+      this.ctx.shadowColor = '#00ffff';
+      this.ctx.shadowBlur = 8;
+    }
+
+    this.ctx.fillStyle = playerColor;
     this.ctx.fillRect(
       screenX - playerHeight / 4,
       playerTop,
       playerHeight / 2,
       playerHeight
     );
+
+    // Reset shadow if it was set
+    if (player.invincible) {
+      this.ctx.shadowBlur = 0;
+    }
 
     // Draw health bar
     const barWidth = playerHeight / 2;

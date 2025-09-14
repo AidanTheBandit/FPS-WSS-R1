@@ -7,6 +7,8 @@ export class Player {
     this.angle = 0;
     this.health = GAME_CONSTANTS.PLAYER_START_HEALTH;
     this.ammo = GAME_CONSTANTS.PLAYER_START_AMMO;
+    this.invincible = false;
+    this.invincibleTimer = 0;
   }
 
   // Scene system methods
@@ -20,6 +22,14 @@ export class Player {
 
   update(deltaTime) {
     // Player update logic is handled in the scene
+    // Handle invincibility timer
+    if (this.invincible) {
+      this.invincibleTimer -= deltaTime;
+      if (this.invincibleTimer <= 0) {
+        this.invincible = false;
+        this.invincibleTimer = 0;
+      }
+    }
   }
 
   move(dx, dy, scene) {
@@ -38,6 +48,8 @@ export class Player {
   }
 
   takeDamage(damage) {
+    if (this.invincible) return; // No damage while invincible
+
     this.health -= damage;
     if (this.health < 0) this.health = 0;
   }

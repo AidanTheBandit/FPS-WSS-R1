@@ -46,7 +46,7 @@ export class GameEngine {
     this.loadLevel(this.currentLevel);
 
     // Initialize player in a valid position after map is loaded
-    this.player = new Player(1.5, 1.5);
+    this.initializePlayer();
 
     // Game loop
     this.lastTime = 0;
@@ -66,6 +66,61 @@ export class GameEngine {
     });
 
     this.gameStateManager.updateEnemies(this.enemies.length);
+  }
+
+  initializePlayer() {
+    // Find a safe initial spawn position
+    let spawnX, spawnY;
+    let attempts = 0;
+    const minDistanceFromEnemies = 3.0;
+
+    do {
+      spawnX = 1.5 + Math.random() * 13;
+      spawnY = 1.5 + Math.random() * 9;
+      attempts++;
+
+      // Check if position is valid and far enough from enemies
+      if (this.isValidPosition(spawnX, spawnY)) {
+        let tooCloseToEnemy = false;
+        for (const enemy of this.enemies) {
+          const dx = spawnX - enemy.x;
+          const dy = spawnY - enemy.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < minDistanceFromEnemies) {
+            tooCloseToEnemy = true;
+            break;
+          }
+        }
+        if (!tooCloseToEnemy) {
+          break; // Found a good spawn position
+        }
+      }
+    } while (attempts < 100);
+
+    // Fallback to basic valid position if needed
+    if (attempts >= 100) {
+      spawnX = 1.5;
+      spawnY = 1.5;
+      if (!this.isValidPosition(spawnX, spawnY)) {
+        // Find any valid position
+        for (let y = 1; y < this.mapHeight - 1; y++) {
+          for (let x = 1; x < this.mapWidth - 1; x++) {
+            if (this.map[y][x] === 0) {
+              spawnX = x + 0.5;
+              spawnY = y + 0.5;
+              break;
+            }
+          }
+          if (spawnX !== 1.5 || spawnY !== 1.5) break;
+        }
+      }
+    }
+
+    this.player = new Player(spawnX, spawnY);
+
+    // Add temporary invincibility for initial spawn
+    this.player.invincible = true;
+    this.player.invincibleTimer = 3000; // 3 seconds for initial spawn
   }
 
   start() {
@@ -98,6 +153,9 @@ export class GameEngine {
 
     // Update input
     this.inputHandler.update(deltaTime);
+
+    // Update player (for invincibility timer, etc.)
+    this.player.update(deltaTime);
 
     // Update bullets
     this.updateBullets(deltaTime);
@@ -338,18 +396,51 @@ export class GameEngine {
       this.player.health = GAME_CONSTANTS.PLAYER_START_HEALTH;
       this.player.ammo = GAME_CONSTANTS.PLAYER_START_AMMO;
 
-      // Find a valid spawn position
+      // Find a valid spawn position away from enemies
       let spawnX, spawnY;
       let attempts = 0;
+      const minDistanceFromEnemies = 3.0; // Minimum distance from any enemy
+
       do {
         spawnX = 1.5 + Math.random() * 13;
         spawnY = 1.5 + Math.random() * 9;
         attempts++;
-      } while (!this.isValidPosition(spawnX, spawnY) && attempts < 50);
+
+        // Check if position is valid and far enough from enemies
+        if (this.isValidPosition(spawnX, spawnY)) {
+          let tooCloseToEnemy = false;
+          for (const enemy of this.enemies) {
+            const dx = spawnX - enemy.x;
+            const dy = spawnY - enemy.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < minDistanceFromEnemies) {
+              tooCloseToEnemy = true;
+              break;
+            }
+          }
+          if (!tooCloseToEnemy) {
+            break; // Found a good spawn position
+          }
+        }
+      } while (attempts < 100); // Increased attempts for better spawn finding
+
+      // If we couldn't find a good position, use the basic valid position check
+      if (attempts >= 100) {
+        attempts = 0;
+        do {
+          spawnX = 1.5 + Math.random() * 13;
+          spawnY = 1.5 + Math.random() * 9;
+          attempts++;
+        } while (!this.isValidPosition(spawnX, spawnY) && attempts < 50);
+      }
 
       this.player.x = spawnX;
       this.player.y = spawnY;
       this.gameState = 'playing';
+
+      // Add temporary invincibility after respawn
+      this.player.invincible = true;
+      this.player.invincibleTimer = 2000; // 2 seconds of invincibility
     }
   }
 
