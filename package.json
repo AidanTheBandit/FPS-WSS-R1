@@ -19,29 +19,13 @@
     "start:frontend": "cd react && npm run dev",
     "start:backend": "cd server && npm run dev",
     "start:prod": "NODE_ENV=production npm run start:backend:prod",
-    "start:frontend:prod": "cd react && npm run serve",
     "start:backend:prod": "cd server && NODE_ENV=production npm start",
-    "tunnel": "npm run tunnel:dev",
-    "tunnel:dev": "concurrently \"npm run tunnel:frontend\" \"npm run tunnel:backend\"",
-    "tunnel:frontend": "cloudflared tunnel --url http://localhost:5642",
-    "tunnel:backend": "echo 'Backend uses same tunnel as frontend'",
-    "tunnel:prod": "npm run build:all && npm run tunnel:server",
-    "tunnel:server": "cd server && NODE_ENV=production npm start & cloudflared tunnel --url http://localhost:5642",
     "clean": "npm run clean:frontend && npm run clean:backend",
     "clean:frontend": "cd react && npm run clean",
     "clean:backend": "cd server && rm -rf dist",
-    "pm2:start": "pm2 start ecosystem.config.js",
-    "pm2:start:dev": "pm2 start ecosystem.config.js --env development",
-    "pm2:start:prod": "npm run build:all && pm2 start ecosystem.config.js --env production",
-    "pm2:stop": "pm2 stop ecosystem.config.js",
-    "pm2:restart": "pm2 restart ecosystem.config.js",
-    "pm2:delete": "pm2 delete ecosystem.config.js",
-    "pm2:logs": "pm2 logs",
-    "pm2:monit": "pm2 monit"
+    "deploy": "./deploy.sh"
   },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
-  },
+  "devDependencies": {},
   "keywords": [
     "monorepo",
     "fps",
@@ -49,8 +33,7 @@
     "react",
     "node.js",
     "socket.io",
-    "raycasting",
-    "cloudflared"
+    "raycasting"
   ],
   "author": "AidanTheBandit",
   "license": "MIT",

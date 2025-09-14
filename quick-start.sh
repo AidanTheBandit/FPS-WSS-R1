@@ -6,15 +6,14 @@ npm run build:all
 
 print_success "Build complete!"
 
-# Start with tunnels
-print_status "Starting production server with Cloudflare tunnel..."
+# Start the production server
+print_status "Starting production server..."
 print_status "Frontend: http://localhost:5642 (served by backend)"
 print_status "Backend: ws://localhost:5642/server (Socket.IO)"
-echo ""
-print_warning "Cloudflare tunnel URL will be displayed below:"
+print_status "Health check: http://localhost:5642/health"
 echo ""
 
-npm run tunnel:serverCloudflare tunneling
+npm run start:prodCloudflare tunneling
 echo "🚀 Starting FPS-WSS-R1 with Cloudflare Tunnels"
 echo "=============================================="
 

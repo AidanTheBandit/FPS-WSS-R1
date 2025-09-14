@@ -47,15 +47,15 @@ npm run tunnel
 # Build everything and start production server
 npm run start:prod
 
-# Build and start with Cloudflare tunnel
-npm run tunnel:prod
+# Or use the deploy script
+npm run deploy
 ```
 
 **Production Architecture:**
 - **Frontend**: Served from root `/` by Express server
 - **Backend**: Socket.IO on `/server` path
 - **Single Server**: One Node.js server handles both
-- **Single Tunnel**: One Cloudflare tunnel for everything
+- **Port**: Everything runs on port 5642
 
 ## 📜 Available Scripts
 
@@ -184,7 +184,7 @@ npm run tunnel:prod
 
 ### Port Conflicts
 - **Development**: Frontend (5173), Backend (5642)
-- **Production**: Everything on port 5642 (Frontend on `/`, Socket.IO on `/server`)
+- **Production**: Everything on port 5642
 
 ### Cloudflare Issues
 - Make sure you're logged in: `cloudflared tunnel login`

@@ -10,37 +10,36 @@ const isProduction = process.env.NODE_ENV === 'production';
 if (isProduction) {
   const reactBuildPath = path.join(__dirname, '../react/dist');
   console.log('Serving React build from:', reactBuildPath);
+
+  // Serve static files
   app.use(express.static(reactBuildPath));
 
-  // Health check endpoint (before catch-all)
-  app.get('/health', (req, res) => {
-    res.json({
-      status: 'ok',
-      players: players.size,
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV
-    });
-  });
-
-  // Serve React app for all non-API routes
-  app.get('*', (req, res) => {
-    // Don't serve React app for Socket.IO paths
+  // Handle React routing - serve index.html for all non-API routes
+  app.get('*', (req, res, next) => {
+    // Skip Socket.IO routes
     if (req.path.startsWith('/socket.io')) {
-      return res.status(404).send('Socket.IO endpoint');
+      return next();
     }
-    res.sendFile(path.join(reactBuildPath, 'index.html'));
-  });
-} else {
-  // Development: just health check
-  app.get('/health', (req, res) => {
-    res.json({
-      status: 'ok',
-      players: players.size,
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV
+
+    // Serve React app for everything else
+    res.sendFile(path.join(reactBuildPath, 'index.html'), (err) => {
+      if (err) {
+        console.error('Error serving React app:', err);
+        res.status(500).send('Error loading application');
+      }
     });
   });
 }
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    players: players.size,
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
 // Simple CORS middleware for same-origin requests
 app.use((req, res, next) => {

@@ -1,9 +1,8 @@
 module.exports = {
   apps: [
     {
-      name: 'fps-frontend',
-      script: 'npm run start:frontend:prod',
-      cwd: './react',
+      name: 'fps-fullstack',
+      script: './server/server.js',
       instances: 1,
       exec_mode: 'fork',
       env: {
