@@ -53,6 +53,8 @@ const RaycastingEngine = () => {
     maxDistance: 50
   });
 
+  const [strafeMode, setStrafeMode] = useState(false);
+
   const handleJoystickStart = (event) => {
     event.preventDefault();
     const rect = event.currentTarget.getBoundingClientRect();
@@ -92,37 +94,62 @@ const RaycastingEngine = () => {
       currentY: prev.startY + clampedY
     }));
 
-    // Update player movement based on joystick position
+        // Update player movement based on joystick position
     if (engineRef.current) {
       const normalizedX = clampedX / maxDistance;
       const normalizedY = clampedY / maxDistance;
 
-      // Movement (Y axis controls forward/backward)
-      if (Math.abs(normalizedY) > 0.1) {
-        if (normalizedY < 0) {
-          engineRef.current.inputHandler?.startMoving('forward');
-          engineRef.current.inputHandler?.stopMoving('backward');
+      if (strafeMode) {
+        // In strafe mode: X controls strafe left/right, Y controls forward/backward
+        if (Math.abs(normalizedX) > 0.1) {
+          if (normalizedX < 0) {
+            engineRef.current.inputHandler?.startMoving('strafe');
+          } else {
+            // For right strafe, we need to modify the movement
+            engineRef.current.inputHandler?.keys.d = true;
+          }
         } else {
-          engineRef.current.inputHandler?.startMoving('backward');
-          engineRef.current.inputHandler?.stopMoving('forward');
+          engineRef.current.inputHandler?.stopMoving('strafe');
+          engineRef.current.inputHandler?.keys.d = false;
         }
-      } else {
-        engineRef.current.inputHandler?.stopMoving('forward');
-        engineRef.current.inputHandler?.stopMoving('backward');
-      }
 
-      // Turning (X axis controls left/right rotation)
-      if (Math.abs(normalizedX) > 0.1) {
-        if (normalizedX < 0) {
-          engineRef.current.inputHandler?.startTurning('left');
-          engineRef.current.inputHandler?.stopTurning('right');
+        if (Math.abs(normalizedY) > 0.1) {
+          if (normalizedY < 0) {
+            engineRef.current.inputHandler?.startMoving('forward');
+          } else {
+            engineRef.current.inputHandler?.startMoving('backward');
+          }
         } else {
-          engineRef.current.inputHandler?.startTurning('right');
-          engineRef.current.inputHandler?.stopTurning('left');
+          engineRef.current.inputHandler?.stopMoving('forward');
+          engineRef.current.inputHandler?.stopMoving('backward');
         }
       } else {
-        engineRef.current.inputHandler?.stopTurning('left');
-        engineRef.current.inputHandler?.stopTurning('right');
+        // Normal mode: Y controls forward/backward, X controls turning
+        if (Math.abs(normalizedY) > 0.1) {
+          if (normalizedY < 0) {
+            engineRef.current.inputHandler?.startMoving('forward');
+            engineRef.current.inputHandler?.stopMoving('backward');
+          } else {
+            engineRef.current.inputHandler?.startMoving('backward');
+            engineRef.current.inputHandler?.stopMoving('forward');
+          }
+        } else {
+          engineRef.current.inputHandler?.stopMoving('forward');
+          engineRef.current.inputHandler?.stopMoving('backward');
+        }
+
+        if (Math.abs(normalizedX) > 0.1) {
+          if (normalizedX < 0) {
+            engineRef.current.inputHandler?.startTurning('left');
+            engineRef.current.inputHandler?.stopTurning('right');
+          } else {
+            engineRef.current.inputHandler?.startTurning('right');
+            engineRef.current.inputHandler?.stopTurning('left');
+          }
+        } else {
+          engineRef.current.inputHandler?.stopTurning('left');
+          engineRef.current.inputHandler?.stopTurning('right');
+        }
       }
     }
   };
@@ -135,8 +162,11 @@ const RaycastingEngine = () => {
     if (engineRef.current) {
       engineRef.current.inputHandler?.stopMoving('forward');
       engineRef.current.inputHandler?.stopMoving('backward');
+      engineRef.current.inputHandler?.stopMoving('strafe');
       engineRef.current.inputHandler?.stopTurning('left');
       engineRef.current.inputHandler?.stopTurning('right');
+      // Also reset keyboard states that might have been set
+      engineRef.current.inputHandler.keys.d = false;
     }
   };
 
@@ -170,22 +200,46 @@ const RaycastingEngine = () => {
         </div>
 
         <div className="touch-controls">
-          <div className="dpad">
-            <button tabIndex="0" className="up" onTouchStart={() => handleTouch('move_forward', true)} onTouchEnd={() => handleTouch('move_forward', false)}
-                    onMouseDown={() => handleTouch('move_forward', true)} onMouseUp={() => handleTouch('move_forward', false)}>↑</button>
-            <button tabIndex="0" className="left" onTouchStart={() => handleTouch('turn_left', true)} onTouchEnd={() => handleTouch('turn_left', false)}
-                    onMouseDown={() => handleTouch('turn_left', true)} onMouseUp={() => handleTouch('turn_left', false)}>←</button>
-            <button tabIndex="0" className="right" onTouchStart={() => handleTouch('turn_right', true)} onTouchEnd={() => handleTouch('turn_right', false)}
-                    onMouseDown={() => handleTouch('turn_right', true)} onMouseUp={() => handleTouch('turn_right', false)}>→</button>
-            <button tabIndex="0" className="down" onTouchStart={() => handleTouch('move_backward', true)} onTouchEnd={() => handleTouch('move_backward', false)}
-                    onMouseDown={() => handleTouch('move_backward', true)} onMouseUp={() => handleTouch('move_backward', false)}>↓</button>
+          {/* Virtual Joystick */}
+          <div className="joystick-container">
+            <div
+              className="joystick-base"
+              onTouchStart={handleJoystickStart}
+              onTouchMove={handleJoystickMove}
+              onTouchEnd={handleJoystickEnd}
+              onMouseDown={handleJoystickStart}
+              onMouseMove={handleJoystickMove}
+              onMouseUp={handleJoystickEnd}
+              onMouseLeave={handleJoystickEnd}
+            >
+              <div
+                className="joystick-handle"
+                style={{
+                  left: `${joystickState.startX + (joystickState.currentX - joystickState.startX)}px`,
+                  top: `${joystickState.startY + (joystickState.currentY - joystickState.startY)}px`,
+                  transform: 'translate(-50%, -50%)'
+                }}
+              />
+            </div>
+            <div className="joystick-label">MOVE</div>
           </div>
+
+          {/* Action Buttons */}
           <div className="action-buttons">
-            <button tabIndex="0" className="shoot" onTouchStart={() => handleTouch('shoot', true)} onMouseDown={() => handleTouch('shoot', true)}>FIRE</button>
-            <button tabIndex="0" className="use" onTouchStart={() => handleTouch('use', true)} onTouchEnd={() => handleTouch('use', false)}
-                    onMouseDown={() => handleTouch('use', true)} onMouseUp={() => handleTouch('use', false)}>USE</button>
-            <button tabIndex="0" className="strafe" onTouchStart={() => handleTouch('strafe', true)} onTouchEnd={() => handleTouch('strafe', false)}
-                    onMouseDown={() => handleTouch('strafe', true)} onMouseUp={() => handleTouch('strafe', false)}>STRAFE</button>
+            <button
+              className="action-btn shoot-btn"
+              onTouchStart={() => engineRef.current?.shoot()}
+              onMouseDown={() => engineRef.current?.shoot()}
+            >
+              FIRE
+            </button>
+            <button
+              className={`action-btn strafe-btn ${strafeMode ? 'active' : ''}`}
+              onTouchStart={() => setStrafeMode(!strafeMode)}
+              onMouseDown={() => setStrafeMode(!strafeMode)}
+            >
+              STRAFE
+            </button>
           </div>
         </div>
 

@@ -85,7 +85,7 @@ export class NetworkManager {
   handlePlayerJoined(player) {
     if (player.id !== this.localPlayerId) {
       this.players.set(player.id, player);
-      console.log(`Player joined: ${player.id}`);
+      console.log(`Player joined: ${player.id}`, player);
       this.gameEngine.gameStateManager.updateConnectedPlayers(this.players.size + 1);
     }
   }
@@ -177,7 +177,9 @@ export class NetworkManager {
   }
 
   getRemotePlayers() {
-    return Array.from(this.players.values()).filter(player => player.connected);
+    const remotePlayers = Array.from(this.players.values()).filter(player => player.connected);
+    console.log(`Remote players: ${remotePlayers.length}`, remotePlayers);
+    return remotePlayers;
   }
 
   isConnected() {

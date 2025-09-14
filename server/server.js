@@ -31,16 +31,18 @@ const GAME_CONSTANTS = {
 
 // Simple map (same as client for now)
 const MAP = [
-  [1,1,1,1,1,1,1,1,1,1],
-  [1,0,0,0,0,0,0,0,0,1],
-  [1,0,1,0,1,0,1,0,0,1],
-  [1,0,0,0,0,0,0,0,0,1],
-  [1,0,1,0,1,0,1,0,0,1],
-  [1,0,0,0,0,0,0,0,0,1],
-  [1,0,1,0,1,0,1,0,0,1],
-  [1,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,1],
-  [1,1,1,1,1,1,1,1,1,1]
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,1,0,0,0,1,1,0,0,1,1,0,0,1],
+  [1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,1],
+  [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+  [1,0,1,0,0,1,0,0,0,0,1,0,0,1,0,1],
+  [1,0,1,1,0,0,0,1,1,0,0,0,1,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,1,1,0,0,0,0,0,0,1,1,0,0,1],
+  [1,0,0,0,1,0,0,1,1,0,0,1,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 ];
 
 function isValidPosition(x, y) {
@@ -76,6 +78,8 @@ io.on('connection', (socket) => {
   // Create new player
   const player = createPlayer(socket.id);
   players.set(socket.id, player);
+
+  console.log(`Total players now: ${players.size}`);
 
   // Send current game state to new player
   socket.emit('gameState', {
@@ -113,6 +117,7 @@ io.on('connection', (socket) => {
     const player = players.get(socket.id);
     if (!player || !player.connected || player.ammo <= 0) return;
 
+    console.log(`Player ${socket.id} shooting`);
     player.ammo--;
 
     // Check for hits on other players
@@ -135,6 +140,7 @@ io.on('connection', (socket) => {
 
         if (normalizedAngleDiff <= Math.PI / 6) { // 30 degree cone
           // Hit!
+          console.log(`Player ${socket.id} hit ${targetId}`);
           targetPlayer.health -= GAME_CONSTANTS.SHOOT_DAMAGE;
           player.score += 100;
 
@@ -185,11 +191,13 @@ io.on('connection', (socket) => {
     if (player) {
       player.connected = false;
       socket.broadcast.emit('playerLeft', socket.id);
+      console.log(`Total players now: ${players.size - 1}`);
 
       // Remove player after delay to allow reconnection
       setTimeout(() => {
         if (!player.connected) {
           players.delete(socket.id);
+          console.log(`Player ${socket.id} removed from game`);
         }
       }, 5000);
     }

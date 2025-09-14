@@ -65,10 +65,10 @@ export class InputHandler {
     if (this.keys.s || this.keys.ArrowDown || this.touchState.moveBackward) {
       this.movePlayer(0, moveSpeed);
     }
-    if (this.keys.a || this.touchState.strafe) {
+    if ((this.keys.a || this.touchState.strafe) && !this.keys.Shift) {
       this.movePlayer(-moveSpeed, 0);
     }
-    if (this.keys.d) {
+    if ((this.keys.d || this.touchState.strafe) && !this.keys.Shift) {
       this.movePlayer(moveSpeed, 0);
     }
 
@@ -105,6 +105,9 @@ export class InputHandler {
       case 'backward':
         this.touchState.moveBackward = true;
         break;
+      case 'strafe':
+        this.touchState.strafe = true;
+        break;
     }
   }
 
@@ -115,6 +118,9 @@ export class InputHandler {
         break;
       case 'backward':
         this.touchState.moveBackward = false;
+        break;
+      case 'strafe':
+        this.touchState.strafe = false;
         break;
     }
   }
