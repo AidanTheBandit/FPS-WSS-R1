@@ -26,7 +26,6 @@ const RaycastingEngine = () => {
     resetTimeout: null // Track reset timeout
   });
 
-  const [strafeMode, setStrafeMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -292,6 +291,13 @@ const RaycastingEngine = () => {
                 console.log('Respawn button clicked');
                 if (engineRef.current?.respawn) {
                   engineRef.current.respawn();
+                  // Reset joystick state after respawn
+                  setJoystickState(prev => ({
+                    ...prev,
+                    active: false,
+                    currentX: 40,
+                    currentY: 40
+                  }));
                 } else {
                   console.error('Engine respawn method not available');
                 }
