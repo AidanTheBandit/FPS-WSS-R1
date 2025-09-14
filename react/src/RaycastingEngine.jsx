@@ -18,11 +18,11 @@ const RaycastingEngine = () => {
   });
   const [joystickState, setJoystickState] = useState({
     active: false,
-    startX: 0,
-    startY: 0,
-    currentX: 0,
-    currentY: 0,
-    maxDistance: 50
+    startX: 60, // Center of 120px joystick base
+    startY: 60,
+    currentX: 60,
+    currentY: 60,
+    maxDistance: 40 // Allow movement within the base
   });
 
   const [strafeMode, setStrafeMode] = useState(false);
@@ -60,15 +60,12 @@ const RaycastingEngine = () => {
     const x = event.touches ? event.touches[0].clientX - rect.left : event.clientX - rect.left;
     const y = event.touches ? event.touches[0].clientY - rect.top : event.clientY - rect.top;
 
-    console.log('Joystick start:', x, y);
-    setJoystickState({
+    setJoystickState(prev => ({
+      ...prev,
       active: true,
-      startX: x,
-      startY: y,
       currentX: x,
-      currentY: y,
-      maxDistance: 50
-    });
+      currentY: y
+    }));
   };
 
   const handleJoystickMove = (event) => {
@@ -79,76 +76,90 @@ const RaycastingEngine = () => {
     const x = event.touches ? event.touches[0].clientX - rect.left : event.clientX - rect.left;
     const y = event.touches ? event.touches[0].clientY - rect.top : event.clientY - rect.top;
 
-    const deltaX = x - joystickState.startX;
-    const deltaY = y - joystickState.startY;
+    // Calculate distance from center
+    const centerX = 60; // Center of 120px base
+    const centerY = 60;
+    const deltaX = x - centerX;
+    const deltaY = y - centerY;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-    // Limit joystick movement
+    // Limit to joystick base radius
     const maxDistance = joystickState.maxDistance;
     const clampedX = distance > maxDistance ? (deltaX / distance) * maxDistance : deltaX;
     const clampedY = distance > maxDistance ? (deltaY / distance) * maxDistance : deltaY;
 
+    const finalX = centerX + clampedX;
+    const finalY = centerY + clampedY;
+
     setJoystickState(prev => ({
       ...prev,
-      currentX: prev.startX + clampedX,
-      currentY: prev.startY + clampedY
+      currentX: finalX,
+      currentY: finalY
     }));
 
-    // Update player movement based on joystick position
-    if (engineRef.current) {
+    // Update movement based on joystick position
+    if (engineRef.current && engineRef.current.inputHandler) {
       const normalizedX = clampedX / maxDistance;
       const normalizedY = clampedY / maxDistance;
 
-      // Clear previous movement
-      engineRef.current.inputHandler.keys.w = false;
-      engineRef.current.inputHandler.keys.s = false;
-      engineRef.current.inputHandler.keys.a = false;
-      engineRef.current.inputHandler.keys.d = false;
-      engineRef.current.inputHandler.keys.ArrowLeft = false;
-      engineRef.current.inputHandler.keys.ArrowRight = false;
+      // Clear all movement keys first
+      const keys = engineRef.current.inputHandler.keys;
+      keys.w = false;
+      keys.s = false;
+      keys.a = false;
+      keys.d = false;
+      keys.ArrowLeft = false;
+      keys.ArrowRight = false;
 
+      // Set movement based on joystick position
       if (strafeMode) {
-        // In strafe mode: X controls strafe left/right, Y controls forward/backward
-        if (Math.abs(normalizedY) > 0.1) {
-          engineRef.current.inputHandler.keys.w = normalizedY < 0;
-          engineRef.current.inputHandler.keys.s = normalizedY > 0;
+        // Strafe mode: X = strafe left/right, Y = forward/backward
+        if (Math.abs(normalizedY) > 0.2) {
+          keys.w = normalizedY < 0; // Forward
+          keys.s = normalizedY > 0; // Backward
         }
-        if (Math.abs(normalizedX) > 0.1) {
-          engineRef.current.inputHandler.keys.a = normalizedX < 0;
-          engineRef.current.inputHandler.keys.d = normalizedX > 0;
+        if (Math.abs(normalizedX) > 0.2) {
+          keys.a = normalizedX < 0; // Strafe left
+          keys.d = normalizedX > 0; // Strafe right
         }
       } else {
-        // Normal mode: Y controls forward/backward, X controls turning
-        if (Math.abs(normalizedY) > 0.1) {
-          engineRef.current.inputHandler.keys.w = normalizedY < 0;
-          engineRef.current.inputHandler.keys.s = normalizedY > 0;
+        // Normal mode: Y = forward/backward, X = turn left/right
+        if (Math.abs(normalizedY) > 0.2) {
+          keys.w = normalizedY < 0; // Forward
+          keys.s = normalizedY > 0; // Backward
         }
-        if (Math.abs(normalizedX) > 0.1) {
-          engineRef.current.inputHandler.keys.ArrowLeft = normalizedX < 0;
-          engineRef.current.inputHandler.keys.ArrowRight = normalizedX > 0;
+        if (Math.abs(normalizedX) > 0.2) {
+          keys.ArrowLeft = normalizedX < 0; // Turn left
+          keys.ArrowRight = normalizedX > 0; // Turn right
         }
       }
     }
-  };  const handleJoystickEnd = (event) => {
+  };
+
+  const handleJoystickEnd = (event) => {
     event.preventDefault();
-    setJoystickState(prev => ({ ...prev, active: false }));
+    setJoystickState(prev => ({
+      ...prev,
+      active: false,
+      currentX: 60, // Reset to center
+      currentY: 60
+    }));
 
     // Stop all movement
-    if (engineRef.current) {
-      engineRef.current.inputHandler.keys.w = false;
-      engineRef.current.inputHandler.keys.s = false;
-      engineRef.current.inputHandler.keys.a = false;
-      engineRef.current.inputHandler.keys.d = false;
-      engineRef.current.inputHandler.keys.ArrowLeft = false;
-      engineRef.current.inputHandler.keys.ArrowRight = false;
+    if (engineRef.current && engineRef.current.inputHandler) {
+      const keys = engineRef.current.inputHandler.keys;
+      keys.w = false;
+      keys.s = false;
+      keys.a = false;
+      keys.d = false;
+      keys.ArrowLeft = false;
+      keys.ArrowRight = false;
     }
   };
 
   const handleFire = () => {
     if (engineRef.current) {
-      // Trigger muzzle flash
       engineRef.current.renderer.triggerMuzzleFlash();
-      // Fire the shot
       engineRef.current.shoot();
     }
   };
@@ -204,11 +215,23 @@ const RaycastingEngine = () => {
                 style={{
                   left: `${joystickState.currentX}px`,
                   top: `${joystickState.currentY}px`,
+                  transform: 'translate(-50%, -50%)',
+                  backgroundColor: joystickState.active ? 'rgba(254, 95, 0, 1)' : 'rgba(254, 95, 0, 0.8)'
+                }}
+              />
+              {/* Center indicator */}
+              <div
+                className="joystick-center"
+                style={{
+                  left: '60px',
+                  top: '60px',
                   transform: 'translate(-50%, -50%)'
                 }}
               />
             </div>
-            <div className="joystick-label">MOVE</div>
+            <div className="joystick-label">
+              {strafeMode ? 'STRAFE MODE' : 'MOVE & TURN'}
+            </div>
           </div>
 
           {/* Action Buttons */}
