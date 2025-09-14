@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import './RaycastingEngine.css';
-import { Engine } from './engine/core/Engine.js';
-import { DoomDemoScene } from './engine/demos/DoomDemo.js';
+import { GameEngine } from './engine/GameEngine.js';
 import LoadingScreen from './components/LoadingScreen.jsx';
 
 const RaycastingEngine = () => {
@@ -23,16 +22,10 @@ const RaycastingEngine = () => {
     const initEngine = async () => {
       const canvas = canvasRef.current;
       if (canvas) {
-        // Create the advanced 3D game engine
-        engineRef.current = new Engine(canvas, {
-          targetFPS: 60,
-          enablePhysics: true,
-          debug: false
+        // Create the game engine
+        engineRef.current = new GameEngine(canvas, (state) => {
+          setGameState(state);
         });
-
-        // Register and load the Doom demo scene
-        engineRef.current.sceneManager.registerScene('DoomDemo', DoomDemoScene);
-        await engineRef.current.sceneManager.loadScene('DoomDemo');
 
         // Start the engine
         engineRef.current.start();
@@ -53,7 +46,28 @@ const RaycastingEngine = () => {
 
   const handleTouch = (action, isStart) => {
     if (engineRef.current) {
-      engineRef.current.input.handleTouch(action, isStart);
+      // Handle touch inputs through the engine
+      switch (action) {
+        case 'move_forward':
+          if (isStart) engineRef.current.inputHandler?.startMoving('forward');
+          else engineRef.current.inputHandler?.stopMoving('forward');
+          break;
+        case 'move_backward':
+          if (isStart) engineRef.current.inputHandler?.startMoving('backward');
+          else engineRef.current.inputHandler?.stopMoving('backward');
+          break;
+        case 'turn_left':
+          if (isStart) engineRef.current.inputHandler?.startTurning('left');
+          else engineRef.current.inputHandler?.stopTurning('left');
+          break;
+        case 'turn_right':
+          if (isStart) engineRef.current.inputHandler?.startTurning('right');
+          else engineRef.current.inputHandler?.stopTurning('right');
+          break;
+        case 'shoot':
+          if (isStart) engineRef.current.shoot();
+          break;
+      }
     }
   };
 
