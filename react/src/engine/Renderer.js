@@ -355,6 +355,35 @@ export class Renderer {
     const bulletSize = Math.max(2, wallHeight * 0.1); // Small bullet size
     const bulletTop = (this.height / 2) - bulletSize / 2;
 
+    // Draw bullet trail first (behind the bullet)
+    if (bullet.trail && bullet.trail.length > 0) {
+      // Draw trail from oldest to newest point
+      for (let i = 0; i < bullet.trail.length; i++) {
+        const trailPoint = bullet.trail[i];
+        const dx = trailPoint.x - this.engine.player.x;
+        const dy = trailPoint.y - this.engine.player.y;
+        const trailDistance = Math.sqrt(dx * dx + dy * dy);
+
+        if (trailDistance > 0.1) { // Don't draw trail too close
+          const trailAngle = Math.atan2(dy, dx) - this.engine.player.angle;
+          let normalizedTrailAngle = trailAngle;
+          while (normalizedTrailAngle > Math.PI) normalizedTrailAngle -= 2 * Math.PI;
+          while (normalizedTrailAngle < -Math.PI) normalizedTrailAngle += 2 * Math.PI;
+
+          if (Math.abs(normalizedTrailAngle) < fov / 2) {
+            const trailScreenX = (normalizedTrailAngle / (fov / 2)) * (this.width / 2) + this.width / 2;
+            const alpha = (i + 1) / bullet.trail.length * 0.4; // Fade trail
+
+            // Draw trail dot
+            this.ctx.fillStyle = `rgba(255, 255, 0, ${alpha})`;
+            this.ctx.beginPath();
+            this.ctx.arc(trailScreenX, this.height / 2, bulletSize / 3, 0, 2 * Math.PI);
+            this.ctx.fill();
+          }
+        }
+      }
+    }
+
     // Draw bullet as a bright yellow/white dot
     this.ctx.fillStyle = '#ffff00';
     this.ctx.beginPath();

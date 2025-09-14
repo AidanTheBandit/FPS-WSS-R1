@@ -121,20 +121,65 @@ export class GameEngine {
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const bullet = this.bullets[i];
 
-      // Update bullet position
-      bullet.x += bullet.velocityX * deltaTime / 16.67; // Normalize to ~60fps
-      bullet.y += bullet.velocityY * deltaTime / 16.67;
+      // Store previous position for trail
+      const prevX = bullet.x;
+      const prevY = bullet.y;
 
-      // Update lifetime
-      bullet.lifetime -= deltaTime;
+      // Calculate new position with physics
+      const timeStep = deltaTime / 16.67; // Normalize to ~60fps
 
-      // Check wall collision
-      const mapX = Math.floor(bullet.x);
-      const mapY = Math.floor(bullet.y);
-      if (mapX < 0 || mapX >= this.mapWidth || mapY < 0 || mapY >= this.mapHeight ||
-          this.map[mapY][mapX] === 1) {
+      // Apply gravity to vertical velocity
+      bullet.velocityY += bullet.gravity * timeStep;
+
+      // Apply air resistance
+      bullet.velocityX *= bullet.airResistance;
+      bullet.velocityY *= bullet.airResistance;
+
+      // Calculate movement vector
+      const moveX = bullet.velocityX * timeStep;
+      const moveY = bullet.velocityY * timeStep;
+
+      // Check for wall collision along the movement path
+      const steps = Math.max(1, Math.ceil(Math.sqrt(moveX * moveX + moveY * moveY) * 10)); // Subdivide movement for accurate collision
+      let hitWall = false;
+      let finalX = bullet.x;
+      let finalY = bullet.y;
+
+      for (let step = 1; step <= steps; step++) {
+        const testX = bullet.x + (moveX * step / steps);
+        const testY = bullet.y + (moveY * step / steps);
+
+        const mapX = Math.floor(testX);
+        const mapY = Math.floor(testY);
+
+        if (mapX < 0 || mapX >= this.mapWidth || mapY < 0 || mapY >= this.mapHeight ||
+            this.map[mapY][mapX] === 1) {
+          hitWall = true;
+          break;
+        }
+
+        finalX = testX;
+        finalY = testY;
+      }
+
+      if (hitWall) {
+        // Bullet hit a wall, remove it
         this.bullets.splice(i, 1);
         continue;
+      }
+
+      // Update bullet position
+      bullet.x = finalX;
+      bullet.y = finalY;
+
+      // Update distance traveled
+      const distanceThisFrame = Math.sqrt(moveX * moveX + moveY * moveY);
+      bullet.distanceTraveled += distanceThisFrame;
+
+      // Add to trail for visual effect (keep last 5 positions)
+      bullet.trail.push({ x: prevX, y: prevY });
+      if (bullet.trail.length > 5) {
+        bullet.trail.shift();
       }
 
       // Check enemy collision
@@ -150,8 +195,8 @@ export class GameEngine {
         }
       }
 
-      // Remove old bullets
-      if (bullet.lifetime <= 0) {
+      // Remove bullets that have traveled too far
+      if (bullet.distanceTraveled >= bullet.maxDistance) {
         this.bullets.splice(i, 1);
       }
     }
@@ -193,15 +238,23 @@ export class GameEngine {
     if (this.player.shoot() && this.gameState === 'playing') {
       this.renderer.triggerMuzzleFlash();
 
-      // Create bullet for visual feedback
-      const bulletSpeed = 2.0; // Increased bullet speed for better visibility
+      // Add bullet spread (inaccuracy)
+      const spread = GAME_CONSTANTS.BULLET_SPREAD;
+      const actualAngle = this.player.angle + (Math.random() - 0.5) * spread;
+
+      // Create bullet with improved physics
+      const bulletSpeed = GAME_CONSTANTS.BULLET_SPEED;
       const bullet = {
         x: this.player.x,
         y: this.player.y,
-        velocityX: Math.cos(this.player.angle) * bulletSpeed,
-        velocityY: Math.sin(this.player.angle) * bulletSpeed,
-        lifetime: 2000, // 2 seconds
-        playerId: 'local' // For identification
+        velocityX: Math.cos(actualAngle) * bulletSpeed,
+        velocityY: Math.sin(actualAngle) * bulletSpeed,
+        gravity: GAME_CONSTANTS.BULLET_GRAVITY,
+        airResistance: GAME_CONSTANTS.BULLET_AIR_RESISTANCE,
+        maxDistance: GAME_CONSTANTS.BULLET_LIFETIME_DISTANCE,
+        distanceTraveled: 0,
+        playerId: 'local',
+        trail: [] // Store trail positions for visual effect
       };
 
       this.bullets.push(bullet);
