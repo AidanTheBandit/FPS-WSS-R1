@@ -71,10 +71,10 @@ export class InputHandler {
 
     // Movement - W/S for forward/backward relative to facing direction
     if (this.keys.w || this.keys.ArrowUp) {
-      this.movePlayerRelative(0, -moveSpeed); // Forward
+      this.movePlayerRelative(0, moveSpeed); // Forward
     }
     if (this.keys.s || this.keys.ArrowDown) {
-      this.movePlayerRelative(0, moveSpeed); // Backward
+      this.movePlayerRelative(0, -moveSpeed); // Backward
     }
 
     // Camera turning - A/D for left/right camera rotation
@@ -100,27 +100,51 @@ export class InputHandler {
   }
 
   handleJoystickInput(deltaTime) {
+    // Always clear joystick-related keys first
+    this.keys.w = false;
+    this.keys.s = false;
+    this.keys.a = false;
+    this.keys.d = false;
+    this.keys.q = false;
+    this.keys.e = false;
+    this.keys.ArrowLeft = false;
+    this.keys.ArrowRight = false;
+
     if (!this.joystickState.active) return;
 
+    const { x, y } = this.joystickState;
+    const deadzone = 0.2;
     const moveSpeed = GAME_CONSTANTS.MOVE_SPEED;
     const turnSpeed = GAME_CONSTANTS.TURN_SPEED;
 
-    const { x, y } = this.joystickState;
-
-    // Movement based on joystick position
-    if (Math.abs(y) > 0.1) {
-      // Forward/backward movement relative to camera direction
-      this.movePlayerRelative(0, -y * moveSpeed);
+    // Direct movement based on joystick position
+    if (Math.abs(y) > deadzone) {
+      if (y > 0) {
+        // Forward movement - use same logic as W key
+        this.movePlayerRelative(0, moveSpeed);
+      } else {
+        // Backward movement - use same logic as S key  
+        this.movePlayerRelative(0, -moveSpeed);
+      }
     }
 
-    if (Math.abs(x) > 0.1) {
-      // Turning or strafing based on strafe mode
+    if (Math.abs(x) > deadzone) {
       if (this.gameEngine.strafeMode) {
-        // Strafe left/right
-        this.movePlayerRelative(x * moveSpeed, 0);
+        // Strafe mode
+        if (x < 0) {
+          // Strafe left - use same logic as Q key
+          this.movePlayerRelative(-moveSpeed, 0);
+        } else {
+          // Strafe right - use same logic as E key
+          this.movePlayerRelative(moveSpeed, 0);
+        }
       } else {
-        // Turn camera left/right
-        this.gameEngine.player.rotate(x * turnSpeed);
+        // Normal mode - turn camera
+        if (x < 0) {
+          this.gameEngine.player.rotate(-turnSpeed);
+        } else {
+          this.gameEngine.player.rotate(turnSpeed);
+        }
       }
     }
   }
@@ -128,12 +152,14 @@ export class InputHandler {
   movePlayerRelative(dx, dy) {
     // Convert relative movement to world coordinates based on player angle
     const angle = this.gameEngine.player.angle;
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
 
-    // Rotate the movement vector by the player's angle
-    const worldDx = dx * cos - dy * sin;
-    const worldDy = dx * sin + dy * cos;
+    // dx is strafe left/right, dy is forward/backward
+    // Forward (dy > 0): move in direction of angle
+    // Strafe right (dx > 0): move perpendicular to angle (angle + π/2)
+    // Strafe left (dx < 0): move perpendicular to angle (angle - π/2)
+
+    const worldDx = dy * Math.cos(angle) + dx * Math.sin(angle);
+    const worldDy = dy * Math.sin(angle) - dx * Math.cos(angle);
 
     const newX = this.gameEngine.player.x + worldDx;
     const newY = this.gameEngine.player.y + worldDy;
