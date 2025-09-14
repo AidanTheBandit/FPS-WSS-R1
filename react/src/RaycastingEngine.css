@@ -179,7 +179,7 @@ html, body {
   border: 2px solid #FE5F00;
   border-radius: 50%;
   cursor: pointer;
-  transition: all 0.1s ease;
+  transition: all 0.15s ease-out; /* Smooth transition back to center */
   pointer-events: none; /* Let parent handle events */
 }
 

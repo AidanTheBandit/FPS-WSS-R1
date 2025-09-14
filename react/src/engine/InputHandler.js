@@ -101,15 +101,17 @@ export class InputHandler {
   }
 
   handleJoystickInput(deltaTime) {
-    // Always clear joystick-related keys first
-    this.keys.w = false;
-    this.keys.s = false;
-    this.keys.a = false;
-    this.keys.d = false;
-    this.keys.q = false;
-    this.keys.e = false;
-    this.keys.ArrowLeft = false;
-    this.keys.ArrowRight = false;
+    // Only clear joystick-related keys if joystick is active
+    if (this.joystickState.active) {
+      this.keys.w = false;
+      this.keys.s = false;
+      this.keys.a = false;
+      this.keys.d = false;
+      this.keys.q = false;
+      this.keys.e = false;
+      this.keys.ArrowLeft = false;
+      this.keys.ArrowRight = false;
+    }
 
     if (!this.joystickState.active) return;
 

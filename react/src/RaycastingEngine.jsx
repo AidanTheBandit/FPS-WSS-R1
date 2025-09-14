@@ -22,7 +22,8 @@ const RaycastingEngine = () => {
     startY: 60,
     currentX: 60,
     currentY: 60,
-    maxDistance: 40 // Allow movement within the base
+    maxDistance: 40, // Allow movement within the base
+    resetTimeout: null // Track reset timeout
   });
 
   const [strafeMode, setStrafeMode] = useState(false);
@@ -107,6 +108,13 @@ const RaycastingEngine = () => {
     const deltaY = y - centerY;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
+    // If the touch/mouse has moved too far from the joystick base, release it
+    const maxAllowedDistance = 100; // Allow some tolerance beyond the visual base
+    if (distance > maxAllowedDistance) {
+      handleJoystickEnd(event);
+      return;
+    }
+
     // Limit to joystick base radius
     const maxDistance = 40; // Smaller than 50 to stay within visual base
     const clampedX = distance > maxDistance ? (deltaX / distance) * maxDistance : deltaX;
@@ -133,11 +141,18 @@ const RaycastingEngine = () => {
 
   const handleJoystickEnd = (event) => {
     event.preventDefault();
+
+    // Clear any existing reset timeout
+    if (joystickState.resetTimeout) {
+      clearTimeout(joystickState.resetTimeout);
+    }
+
     setJoystickState(prev => ({
       ...prev,
       active: false,
       currentX: 60, // Reset to center
-      currentY: 60
+      currentY: 60,
+      resetTimeout: null
     }));
 
     // Stop all movement
@@ -146,6 +161,27 @@ const RaycastingEngine = () => {
       engineRef.current.inputHandler.setJoystickState(false, 0, 0);
     }
   };
+
+  // Add global mouse up handler to ensure joystick releases even if mouse leaves
+  useEffect(() => {
+    const handleGlobalMouseUp = (event) => {
+      if (joystickState.active) {
+        handleJoystickEnd(event);
+      }
+    };
+
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    document.addEventListener('touchend', handleGlobalMouseUp);
+
+    return () => {
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('touchend', handleGlobalMouseUp);
+      // Clear any pending timeout on cleanup
+      if (joystickState.resetTimeout) {
+        clearTimeout(joystickState.resetTimeout);
+      }
+    };
+  }, [joystickState.active]);
 
   const handleFire = () => {
     if (engineRef.current) {
@@ -212,6 +248,10 @@ const RaycastingEngine = () => {
               onMouseMove={handleJoystickMove}
               onMouseUp={handleJoystickEnd}
               onMouseLeave={handleJoystickEnd}
+              style={{
+                backgroundColor: joystickState.active ? 'rgba(254, 95, 0, 0.3)' : 'rgba(254, 95, 0, 0.2)',
+                boxShadow: joystickState.active ? '0 0 15px rgba(254, 95, 0, 0.5)' : 'none'
+              }}
             >
               <div
                 className="joystick-handle"
@@ -219,7 +259,8 @@ const RaycastingEngine = () => {
                   left: `${joystickState.currentX}px`,
                   top: `${joystickState.currentY}px`,
                   transform: 'translate(-50%, -50%)',
-                  backgroundColor: joystickState.active ? 'rgba(254, 95, 0, 1)' : 'rgba(254, 95, 0, 0.8)'
+                  backgroundColor: joystickState.active ? 'rgba(254, 95, 0, 1)' : 'rgba(254, 95, 0, 0.8)',
+                  boxShadow: joystickState.active ? '0 0 10px rgba(254, 95, 0, 0.8)' : 'none'
                 }}
               />
               {/* Center indicator */}
