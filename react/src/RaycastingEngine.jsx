@@ -76,6 +76,51 @@ const RaycastingEngine = () => {
     };
   }, []);
 
+  // Prevent scrolling and unwanted interactions
+  useEffect(() => {
+    const preventScroll = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
+
+    const preventWheel = (e) => {
+      e.preventDefault();
+    };
+
+    const preventTouchMove = (e) => {
+      if (e.target.closest('.joystick-container') || e.target.closest('.action-buttons')) {
+        return; // Allow touch events on controls
+      }
+      e.preventDefault();
+    };
+
+    // Prevent all types of scrolling
+    document.addEventListener('wheel', preventWheel, { passive: false });
+    document.addEventListener('touchmove', preventTouchMove, { passive: false });
+    document.addEventListener('scroll', preventScroll, { passive: false });
+
+    // Prevent context menu
+    const preventContextMenu = (e) => e.preventDefault();
+    document.addEventListener('contextmenu', preventContextMenu);
+
+    // Prevent zoom gestures
+    const preventGesture = (e) => e.preventDefault();
+    document.addEventListener('gesturestart', preventGesture);
+    document.addEventListener('gesturechange', preventGesture);
+    document.addEventListener('gestureend', preventGesture);
+
+    return () => {
+      document.removeEventListener('wheel', preventWheel);
+      document.removeEventListener('touchmove', preventTouchMove);
+      document.removeEventListener('scroll', preventScroll);
+      document.removeEventListener('contextmenu', preventContextMenu);
+      document.removeEventListener('gesturestart', preventGesture);
+      document.removeEventListener('gesturechange', preventGesture);
+      document.removeEventListener('gestureend', preventGesture);
+    };
+  }, []);
+
   const handleJoystickStart = (event) => {
     event.preventDefault();
     const rect = event.currentTarget.getBoundingClientRect();
