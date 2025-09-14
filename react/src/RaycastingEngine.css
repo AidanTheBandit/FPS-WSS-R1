@@ -42,14 +42,19 @@ html, body {
 /* Multiplayer HUD */
 .multiplayer-hud {
   position: absolute;
-  top: 2vw;
-  right: 2vw;
+  top: 10px;
+  right: 10px;
   display: flex;
   flex-direction: column;
-  gap: 1vw;
-  font-size: clamp(12px, 2.5vw, 24px);
-  z-index: 50;
+  gap: 5px;
+  font-size: 14px;
+  z-index: 1000;
   pointer-events: none;
+  background-color: rgba(0, 0, 0, 0.9);
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #FE5F00;
+  min-width: 150px;
 }
 
 .connection-status {

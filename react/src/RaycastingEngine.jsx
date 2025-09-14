@@ -199,18 +199,22 @@ const RaycastingEngine = () => {
         <canvas ref={canvasRef} className="game-canvas" />
 
         {/* Multiplayer HUD */}
-        <div className="multiplayer-hud">
+        <div className="multiplayer-hud" style={{ display: 'block', visibility: 'visible' }}>
           <div className={`connection-status ${gameState.isConnected ? 'connected' : 'disconnected'}`}>
             {gameState.isConnected ? '🟢 Connected' : '🔴 Disconnected'}
           </div>
           <div className="player-count">
-            Players: {gameState.connectedPlayers}
+            Players: {gameState.connectedPlayers || 0}
           </div>
           {gameState.playerId && (
             <div className="player-id">
               ID: {gameState.playerId.substring(0, 8)}
             </div>
           )}
+          {/* Debug info */}
+          <div style={{ fontSize: '10px', color: 'yellow', background: 'rgba(0,0,0,0.8)', padding: '2px', marginTop: '5px' }}>
+            Debug: {JSON.stringify({ connected: gameState.isConnected, players: gameState.connectedPlayers, id: gameState.playerId })}
+          </div>
         </div>
 
         {/* Game Stats HUD */}
@@ -219,9 +223,6 @@ const RaycastingEngine = () => {
           <div className="ammo">Ammo: {gameState.ammo}</div>
           <div className="score">Score: {gameState.score}</div>
           <div className="level">Level: {gameState.level}</div>
-          <div className="controls-hint">
-            WASD: Move | Mouse wheel: Turn | Shift: Toggle strafe | Space: Shoot
-          </div>
         </div>
 
         <div className="touch-controls">
