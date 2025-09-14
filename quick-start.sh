@@ -46,8 +46,7 @@ print_success "Build complete!"
 
 # Start with tunnels
 print_status "Starting servers with Cloudflare tunnels..."
-print_status "Frontend: http://localhost:5642 (dev and prod)"
-print_status "Backend: http://localhost:5642"
+print_status "Frontend & Backend: http://localhost:5642 (same domain/port, Socket.IO on /server)"
 echo ""
 print_warning "Cloudflare tunnel URLs will be displayed below:"
 echo ""

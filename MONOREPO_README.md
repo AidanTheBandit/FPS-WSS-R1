@@ -177,8 +177,7 @@ npm run tunnel:prod
 ## 🐛 Troubleshooting
 
 ### Port Conflicts
-- Frontend: http://localhost:5642 (dev and prod)
-- Backend: http://localhost:5642
+- Frontend & Backend: http://localhost:5642 (same port, same domain)
 
 ### Cloudflare Issues
 - Make sure you're logged in: `cloudflared tunnel login`

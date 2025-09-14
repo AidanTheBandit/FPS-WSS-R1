@@ -21,6 +21,7 @@ app.use((req, res, next) => {
 
 const server = http.createServer(app);
 const io = socketIo(server, {
+  path: '/server',
   cors: {
     origin: true, // Allow same origin
     methods: ["GET", "POST"],

@@ -23,6 +23,7 @@ export class NetworkManager {
     this.connectionAttempts++;
 
     this.socket = io(this.serverUrl, {
+      path: '/server',
       timeout: 5000, // 5 second connection timeout
       reconnection: true,
       reconnectionAttempts: 3,

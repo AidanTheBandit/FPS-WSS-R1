@@ -205,9 +205,9 @@ const RaycastingEngine = () => {
           <div className="joystick-container">
             <div
               className="joystick-base"
-              onTouchStart={handleJoystickStart}
-              onTouchMove={handleJoystickMove}
-              onTouchEnd={handleJoystickEnd}
+              onTouchStart={(e) => { e.preventDefault(); handleJoystickStart(e); }}
+              onTouchMove={(e) => { e.preventDefault(); handleJoystickMove(e); }}
+              onTouchEnd={(e) => { e.preventDefault(); handleJoystickEnd(e); }}
               onMouseDown={handleJoystickStart}
               onMouseMove={handleJoystickMove}
               onMouseUp={handleJoystickEnd}
@@ -241,14 +241,14 @@ const RaycastingEngine = () => {
           <div className="action-buttons">
             <button
               className="action-btn shoot-btn"
-              onTouchStart={handleFire}
+              onTouchStart={(e) => { e.preventDefault(); handleFire(); }}
               onMouseDown={handleFire}
             >
               FIRE
             </button>
             <button
               className={`action-btn strafe-btn ${strafeMode ? 'active' : ''}`}
-              onTouchStart={handleStrafeToggle}
+              onTouchStart={(e) => { e.preventDefault(); handleStrafeToggle(); }}
               onMouseDown={handleStrafeToggle}
             >
               STRAFE
