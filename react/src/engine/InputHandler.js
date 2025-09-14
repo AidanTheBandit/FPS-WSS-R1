@@ -92,13 +92,13 @@ export class InputHandler {
       this.gameEngine.player.rotate(turnSpeed * dt);
     }
 
-    // Strafing - Q/E for left/right movement (used in strafe mode)
-    if (this.keys.q) {
-      this.movePlayerRelative(-moveSpeed * dt, 0);
-    }
-    if (this.keys.e) {
-      this.movePlayerRelative(moveSpeed * dt, 0);
-    }
+    // Strafing - Q/E for left/right movement (removed - strafe button removed)
+    // if (this.keys.q) {
+    //   this.movePlayerRelative(-moveSpeed * dt, 0);
+    // }
+    // if (this.keys.e) {
+    //   this.movePlayerRelative(moveSpeed * dt, 0);
+    // }
 
     // Shooting - Spacebar (only trigger once per press)
     if (this.keys[' ']) {
@@ -116,7 +116,6 @@ export class InputHandler {
     const sensitivity = 0.3;
     const moveSpeed = GAME_CONSTANTS.MOVE_SPEED * sensitivity;
     const turnSpeed = GAME_CONSTANTS.TURN_SPEED * sensitivity;
-    const dt = deltaTime / 16.67; // Normalize to ~60fps
 
     // Apply exponential scaling for better control at low speeds
     const applySensitivity = (value) => {
@@ -129,18 +128,6 @@ export class InputHandler {
 
     const scaledX = applySensitivity(x);
     const scaledY = applySensitivity(y);
-
-    // Only apply joystick movement if it has significant input
-    if (this.joystickState.active && (Math.abs(scaledX) > 0.01 || Math.abs(scaledY) > 0.01)) {
-      // Override keyboard movement keys when joystick is providing input
-      this.keys.w = false;
-      this.keys.s = false;
-      this.keys.a = false;
-      this.keys.d = false;
-      this.keys.q = false;
-      this.keys.e = false;
-      this.keys.ArrowLeft = false;
-      this.keys.ArrowRight = false;
 
     // Only apply joystick movement if it has significant input
     if (this.joystickState.active && (Math.abs(scaledX) > 0.01 || Math.abs(scaledY) > 0.01)) {
@@ -167,21 +154,13 @@ export class InputHandler {
       }
 
       if (Math.abs(scaledX) > 0.01) {
-        if (this.gameEngine.strafeMode) {
-          if (scaledX < 0) {
-            this.movePlayerRelative(-moveSpeed * dt * Math.abs(scaledX), 0);
-          } else {
-            this.movePlayerRelative(moveSpeed * dt * Math.abs(scaledX), 0);
-          }
+        // Always use turn mode for joystick (strafe mode removed)
+        if (scaledX < 0) {
+          this.gameEngine.player.rotate(-turnSpeed * dt * Math.abs(scaledX));
         } else {
-          if (scaledX < 0) {
-            this.gameEngine.player.rotate(-turnSpeed * dt * Math.abs(scaledX));
-          } else {
-            this.gameEngine.player.rotate(turnSpeed * dt * Math.abs(scaledX));
-          }
+          this.gameEngine.player.rotate(turnSpeed * dt * Math.abs(scaledX));
         }
       }
-    }
     }
   }
 

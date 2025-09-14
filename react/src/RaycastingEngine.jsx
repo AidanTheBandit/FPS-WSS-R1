@@ -287,13 +287,6 @@ const RaycastingEngine = () => {
             >
               FIRE
             </button>
-            <button
-              className={`action-btn strafe-btn ${strafeMode ? 'active' : ''}`}
-              onTouchStart={(e) => { e.preventDefault(); handleStrafeToggle(); }}
-              onMouseDown={handleStrafeToggle}
-            >
-              STRAFE
-            </button>
           </div>
         </div>
 
