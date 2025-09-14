@@ -33,14 +33,24 @@ npm run install:server         # Backend dependencies
 ```bash
 # Start both frontend and backend in development mode
 npm start
-# Frontend: http://localhost:5642
+# Frontend: http://localhost:5173
 # Backend: http://localhost:5642
-
-# Start with Cloudflare tunnels
-npm run tunnel
-# Frontend tunnel URL will be provided
-# Backend tunnel URL will be provided
 ```
+
+### Production Setup
+```bash
+# Build everything and start production server
+npm run start:prod
+
+# Or use the deploy script
+npm run deploy
+```
+
+**Production Architecture:**
+- **Frontend**: Served from root `/` by Express server
+- **Backend**: Socket.IO on `/server` path
+- **Single Server**: One Node.js server handles both
+- **Port**: Everything runs on port 5642
 
 ### Production Setup
 ```bash
@@ -65,54 +75,19 @@ npm run deploy
 - `npm run build:all` - Build both frontend and backend
 - `npm start` - Start development servers
 - `npm run start:prod` - Start production servers
-- `npm run tunnel` - Start development with Cloudflare tunnels
-- `npm run tunnel:prod` - Start production with Cloudflare tunnels
 - `npm run clean` - Clean all build artifacts
+- `npm run deploy` - Build and deploy to production
 
 ### Frontend Scripts (React/Vite)
 - `npm run start:frontend` - Start frontend dev server
-- `npm run start:frontend:prod` - Start frontend production server
 - `npm run build:frontend` - Build frontend for production
-- `npm run tunnel:frontend` - Tunnel frontend only
 - `npm run clean:frontend` - Clean frontend build
 
 ### Backend Scripts (Node.js)
 - `npm run start:backend` - Start backend dev server
 - `npm run start:backend:prod` - Start backend production server
 - `npm run build:backend` - Build backend (no-op for Node.js)
-- `npm run tunnel:backend` - Tunnel backend only
 - `npm run clean:backend` - Clean backend build
-
-## 🌐 Cloudflare Tunnel Setup
-
-### 1. Install Cloudflared
-```bash
-# macOS
-brew install cloudflared
-
-# Or download from: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/tunnel-guide/
-```
-
-### 2. Authenticate
-```bash
-cloudflared tunnel login
-```
-
-### 3. Create Tunnels (Optional)
-```bash
-# Create named tunnels
-cloudflared tunnel create fps-frontend
-cloudflared tunnel create fps-backend
-```
-
-### 4. Use the Scripts
-```bash
-# Development with tunnels
-npm run tunnel
-
-# Production with tunnels
-npm run tunnel:prod
-```
 
 ## 🔧 Manual Commands
 
@@ -124,7 +99,6 @@ cd react
 npm install
 npm run dev          # Development
 npm run build        # Build for production
-npm run serve        # Serve built files
 ```
 
 ### Backend Only
@@ -142,12 +116,6 @@ npm run start:frontend
 
 # Terminal 2 - Backend
 npm run start:backend
-
-# Terminal 3 - Frontend Tunnel (optional)
-npm run tunnel:frontend
-
-# Terminal 4 - Backend Tunnel (optional)
-npm run tunnel:backend
 ```
 
 ## 📦 Build Process

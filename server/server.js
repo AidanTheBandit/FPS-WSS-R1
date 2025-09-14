@@ -301,7 +301,7 @@ app.get('/health', (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5642;
+const PORT = process.env.PORT || 5462;
 server.listen(PORT, () => {
   console.log(`🚀 Multiplayer FPS server running on port ${PORT}`);
   console.log(`📱 Frontend: http://localhost:${PORT} (served by Express)`);
