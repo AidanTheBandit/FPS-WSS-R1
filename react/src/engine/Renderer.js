@@ -163,6 +163,37 @@ export class Renderer {
       });
     }
 
+    // Add bullets to render queue
+    if (scene.bullets && Array.isArray(scene.bullets)) {
+      scene.bullets.forEach(bullet => {
+        const dx = bullet.x - player.x;
+        const dy = bullet.y - player.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Calculate angle relative to player
+        const angle = Math.atan2(dy, dx) - player.angle;
+
+        // Normalize angle to -PI to PI
+        let normalizedAngle = angle;
+        while (normalizedAngle > Math.PI) normalizedAngle -= 2 * Math.PI;
+        while (normalizedAngle < -Math.PI) normalizedAngle += 2 * Math.PI;
+
+        // Check if bullet is in field of view
+        if (Math.abs(normalizedAngle) < fov / 2) {
+          // Check line of sight (not behind walls)
+          const rayDistance = this.castRay(player.x, player.y, Math.atan2(dy, dx), map, maxDepth);
+          if (rayDistance >= distance) {
+            renderQueue.push({
+              type: 'bullet',
+              bullet: bullet,
+              distance: distance,
+              angle: normalizedAngle
+            });
+          }
+        }
+      });
+    }
+
     // Sort by distance (closest first for proper depth - render far to near)
     renderQueue.sort((a, b) => b.distance - a.distance);
 

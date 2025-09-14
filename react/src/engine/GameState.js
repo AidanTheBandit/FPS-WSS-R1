@@ -2,7 +2,7 @@ export class GameState {
   constructor(setGameStateCallback) {
     this.setGameStateCallback = setGameStateCallback;
     this.state = {
-      health: 100,
+      health: 150,
       ammo: 50,
       level: 1,
       enemies: 0,
