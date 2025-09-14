@@ -116,6 +116,47 @@ export class GameEngine {
     this.gameStateManager.updateScore(this.score);
   }
 
+  updateBullets(deltaTime) {
+    // Update bullet positions and check for collisions
+    for (let i = this.bullets.length - 1; i >= 0; i--) {
+      const bullet = this.bullets[i];
+
+      // Update bullet position
+      bullet.x += bullet.velocityX * deltaTime / 16.67; // Normalize to ~60fps
+      bullet.y += bullet.velocityY * deltaTime / 16.67;
+
+      // Update lifetime
+      bullet.lifetime -= deltaTime;
+
+      // Check wall collision
+      const mapX = Math.floor(bullet.x);
+      const mapY = Math.floor(bullet.y);
+      if (mapX < 0 || mapX >= this.mapWidth || mapY < 0 || mapY >= this.mapHeight ||
+          this.map[mapY][mapX] === 1) {
+        this.bullets.splice(i, 1);
+        continue;
+      }
+
+      // Check enemy collision
+      for (const enemy of this.enemies) {
+        const dx = bullet.x - enemy.x;
+        const dy = bullet.y - enemy.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < 0.5) { // Bullet hit radius
+          enemy.takeDamage(GAME_CONSTANTS.SHOOT_DAMAGE);
+          this.bullets.splice(i, 1);
+          break;
+        }
+      }
+
+      // Remove old bullets
+      if (bullet.lifetime <= 0) {
+        this.bullets.splice(i, 1);
+      }
+    }
+  }
+
   castRay(angle) {
     const sin = Math.sin(angle);
     const cos = Math.cos(angle);
