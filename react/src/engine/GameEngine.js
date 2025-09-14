@@ -93,48 +93,27 @@ export class GameEngine {
     requestAnimationFrame(time => this.gameLoop(time));
   }
 
-  updateBullets(deltaTime) {
-    // Update bullet positions and check for collisions
-    for (let i = this.bullets.length - 1; i >= 0; i--) {
-      const bullet = this.bullets[i];
+  update(deltaTime) {
+    if (this.gameState !== 'playing') return;
 
-      // Update bullet position
-      bullet.x += bullet.velocityX * deltaTime / 16.67; // Normalize to ~60fps
-      bullet.y += bullet.velocityY * deltaTime / 16.67;
+    // Update input
+    this.inputHandler.update(deltaTime);
 
-      // Update lifetime
-      bullet.lifetime -= deltaTime;
+    // Update bullets
+    this.updateBullets(deltaTime);
 
-      // Check wall collision
-      const mapX = Math.floor(bullet.x);
-      const mapY = Math.floor(bullet.y);
-      if (mapX < 0 || mapX >= this.mapWidth || mapY < 0 || mapY >= this.mapHeight ||
-          this.map[mapY][mapX] === 1) {
-        this.bullets.splice(i, 1);
-        continue;
-      }
+    // Update enemies
+    this.enemies.forEach(enemy => enemy.update(deltaTime));
 
-      // Only check enemy collision in single-player mode
-      // In multiplayer, server handles all hit detection
-      if (!this.networkManager.isConnected()) {
-        for (const enemy of this.enemies) {
-          const dx = bullet.x - enemy.x;
-          const dy = bullet.y - enemy.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < 0.5) { // Bullet hit radius
-            enemy.takeDamage(GAME_CONSTANTS.SHOOT_DAMAGE);
-            this.bullets.splice(i, 1);
-            break;
-          }
-        }
-      }
-
-      // Remove old bullets
-      if (bullet.lifetime <= 0) {
-        this.bullets.splice(i, 1);
-      }
+    // Send player position to server
+    if (this.networkManager.isConnected()) {
+      this.networkManager.sendPlayerMove(this.player.x, this.player.y, this.player.angle);
     }
+
+    // Update game state
+    this.gameStateManager.updateHealth(this.player.health);
+    this.gameStateManager.updateAmmo(this.player.ammo);
+    this.gameStateManager.updateScore(this.score);
   }
 
   castRay(angle) {
