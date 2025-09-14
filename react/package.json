@@ -1,0 +1,65 @@
+{
+  "name": "rabbit-raycast-react",
+  "private": true,
+  "version": "1.0.0",
+  "description": "React implementation of Rabbit-Raycast - A Doom-like 3D raycasting engine optimized for R1 device",
+  "type": "module",
+  "main": "src/RaycastingEngine.jsx",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "vite preview --host",
+    "clean": "rm -rf dist",
+    "build:prod": "npm run clean && npm run build",
+    "deploy": "vercel --prod",
+    "deploy:staging": "vercel",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "vite": "^7.1.2"
+  },
+  "keywords": [
+    "react",
+    "raycasting",
+    "doom",
+    "3d-rendering",
+    "r1-device",
+    "game-engine",
+    "canvas",
+    "webgl-alternative"
+  ],
+  "author": "AidanTheBandit",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AidanTheBandit/Rabbit-Raycast.git",
+    "directory": "react"
+  },
+  "bugs": {
+    "url": "https://github.com/AidanTheBandit/Rabbit-Raycast/issues"
+  },
+  "homepage": "https://github.com/AidanTheBandit/Rabbit-Raycast/tree/main/react#readme",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "not dead",
+    "> 0.2%"
+  ]
+}

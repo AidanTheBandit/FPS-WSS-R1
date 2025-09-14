@@ -1,0 +1,63 @@
+/* Loading Screen Styles */
+
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  color: #FE5F00;
+  font-family: 'Courier New', monospace;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-logo h1 {
+  font-size: 4vw;
+  margin-bottom: 2vh;
+  text-shadow: 2px 2px 4px rgba(254, 95, 0, 0.5);
+}
+
+.loading-spinner {
+  width: 5vw;
+  height: 5vw;
+  border: 0.5vw solid #333;
+  border-top: 0.5vw solid #FE5F00;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 2vh auto;
+}
+
+.loading-text {
+  font-size: 2vw;
+  opacity: 0.8;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .loading-logo h1 {
+    font-size: 8vw;
+  }
+
+  .loading-spinner {
+    width: 10vw;
+    height: 10vw;
+    border-width: 1vw;
+  }
+
+  .loading-text {
+    font-size: 4vw;
+  }
+}

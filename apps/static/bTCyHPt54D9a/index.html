@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=240, height=320, user-scalable=no, initial-scale=1.0">
+    <title>R1 Doom</title>
+  <script type="module" crossorigin src="./assets/main-gXtZd9VN.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/main-BIXHcznw.css">
+</head>
+<body>
+    <div id="app">
+        <canvas id="gameCanvas"></canvas>
+        <div id="loading" class="loading-screen">
+            <h1>R1 DOOM</h1>
+            <p>Loading...</p>
+        </div>
+        <div id="touchControls" class="touch-controls">
+            <div class="movement-pad">
+                <div class="dpad">
+                    <button id="up" class="dpad-btn up">↑</button>
+                    <button id="left" class="dpad-btn left">←</button>
+                    <button id="right" class="dpad-btn right">→</button>
+                    <button id="down" class="dpad-btn down">↓</button>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button id="shoot" class="action-btn shoot">FIRE</button>
+                <button id="use" class="action-btn use">USE</button>
+                <button id="strafe" class="action-btn strafe">STRAFE</button>
+            </div>
+        </div>
+        <div id="hud" class="hud">
+            <div class="health">Health: <span id="healthValue">100</span></div>
+            <div class="ammo">Ammo: <span id="ammoValue">50</span></div>
+        </div>
+    </div>
+</body>
+</html>

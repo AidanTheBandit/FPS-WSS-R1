@@ -1,0 +1,235 @@
+/* R1 Doom - Responsive layout for portrait/landscape */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    background-color: #000;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+#app {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Game Canvas */
+#gameCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #333;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+/* Loading Screen */
+.loading-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #000;
+    z-index: 100;
+}
+
+.loading-screen h1 {
+    font-size: 8vw;
+    color: #FE5F00;
+    margin-bottom: 4vw;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+}
+
+.loading-screen p {
+    font-size: 4vw;
+    color: #fff;
+}
+
+/* HUD Elements */
+.hud {
+    position: absolute;
+    top: 2vw;
+    left: 2vw;
+    right: 2vw;
+    display: flex;
+    justify-content: space-between;
+    font-size: 3vw;
+    color: #FE5F00;
+    z-index: 50;
+    pointer-events: none;
+}
+
+/* Portrait Mode (240x320) - Default R1 */
+.touch-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 35vh;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 2vw;
+    z-index: 60;
+}
+
+.movement-pad {
+    display: flex;
+    align-items: center;
+}
+
+.dpad {
+    position: relative;
+    width: 25vw;
+    height: 25vw;
+}
+
+.dpad-btn {
+    position: absolute;
+    width: 8vw;
+    height: 8vw;
+    background-color: rgba(254, 95, 0, 0.8);
+    border: 1px solid #FE5F00;
+    color: #fff;
+    font-size: 3vw;
+    border-radius: 1vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.dpad-btn:active {
+    background-color: rgba(254, 95, 0, 1);
+}
+
+.dpad-btn.up {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.dpad-btn.down {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.dpad-btn.left {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.dpad-btn.right {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 2vw;
+}
+
+.action-btn {
+    width: 18vw;
+    height: 8vw;
+    background-color: rgba(254, 95, 0, 0.8);
+    border: 1px solid #FE5F00;
+    color: #fff;
+    font-size: 2.5vw;
+    font-weight: bold;
+    border-radius: 1vw;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.action-btn:active {
+    background-color: rgba(254, 95, 0, 1);
+}
+
+.action-btn.shoot {
+    background-color: rgba(255, 0, 0, 0.8);
+    border-color: #ff0000;
+}
+
+.action-btn.shoot:active {
+    background-color: rgba(255, 0, 0, 1);
+}
+
+/* Landscape Mode - When R1 is rotated horizontally */
+@media (orientation: landscape) {
+    .touch-controls {
+        height: 100vh;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2vh 2vw;
+    }
+    
+    .movement-pad {
+        width: 40vw;
+    }
+    
+    .dpad {
+        width: 20vh;
+        height: 20vh;
+    }
+    
+    .dpad-btn {
+        width: 6vh;
+        height: 6vh;
+        font-size: 2vh;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 2vh;
+        width: 30vw;
+    }
+    
+    .action-btn {
+        width: 25vw;
+        height: 6vh;
+        font-size: 2vh;
+    }
+    
+    .hud {
+        top: 2vh;
+        left: 2vw;
+        right: 2vw;
+        font-size: 2vh;
+    }
+    
+    #gameCanvas {
+        /* In landscape, use full screen for better gaming experience */
+        width: 100vw;
+        height: 100vh;
+    }
+}
+
+/* Hidden class for showing/hiding elements */
+.hidden {
+    display: none !important;
+}
