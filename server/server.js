@@ -440,6 +440,9 @@ setInterval(() => {
     console.log(`Cleaned up ${beforeCount - afterCount} disconnected players`);
   }
 }, 30000); // Run every 30 seconds
+
+// Start server
+const PORT = process.env.PORT || 5462;
 server.listen(PORT, () => {
   console.log(`🚀 Multiplayer FPS server running on port ${PORT}`);
   console.log(`📱 Frontend: http://localhost:${PORT} (served by Express)`);
