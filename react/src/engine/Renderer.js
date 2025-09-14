@@ -201,6 +201,38 @@ export class Renderer {
     this.ctx.fillText(player.id.substring(0, 4), screenX, playerTop - 12);
   }
 
+  renderEnemySprite(enemy, distance, angle, fov) {
+    if (!enemy || typeof enemy.health === 'undefined' || typeof enemy.state === 'undefined') return;
+
+    // Calculate screen position
+    const screenX = (angle / (fov / 2)) * (this.width / 2) + this.width / 2;
+    const wallHeight = (this.height / 2) / distance;
+    const enemyHeight = wallHeight * (enemy.size || 0.5);
+    const enemyTop = (this.height / 2) - enemyHeight / 2;
+    const enemyBottom = (this.height / 2) + enemyHeight / 2;
+
+    // Draw enemy sprite
+    const color = enemy.state === 'chasing' ? '#ff0000' : '#880000';
+    this.ctx.fillStyle = color;
+    this.ctx.fillRect(
+      screenX - enemyHeight / 4,
+      enemyTop,
+      enemyHeight / 2,
+      enemyHeight
+    );
+
+    // Draw health bar
+    const barWidth = enemyHeight / 2;
+    const barHeight = 4;
+    const healthPercent = enemy.health / (enemy.maxHealth || 100);
+
+    this.ctx.fillStyle = '#000';
+    this.ctx.fillRect(screenX - barWidth / 2, enemyTop - 8, barWidth, barHeight);
+
+    this.ctx.fillStyle = healthPercent > 0.5 ? '#0f0' : healthPercent > 0.25 ? '#ff0' : '#f00';
+    this.ctx.fillRect(screenX - barWidth / 2, enemyTop - 8, barWidth * healthPercent, barHeight);
+  }
+
   renderAmmoPickup(pickup, distance, angle, fov) {
     if (!pickup) return;
 
