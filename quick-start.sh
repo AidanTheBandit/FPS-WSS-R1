@@ -1,21 +1,8 @@
 #!/bin/bash
 
-# Quick start script for FP# Build the project
-print_status "Building project..."
-npm run build:all
-
-print_success "Build complete!"
-
-# Start the production server
-print_status "Starting production server..."
-print_status "Frontend: http://localhost:5642 (served by backend)"
-print_status "Backend: ws://localhost:5642/server (Socket.IO)"
-print_status "Health check: http://localhost:5642/health"
-echo ""
-
-npm run start:prodCloudflare tunneling
-echo "🚀 Starting FPS-WSS-R1 with Cloudflare Tunnels"
-echo "=============================================="
+# Quick start script for FPS-WSS-R1
+echo "🚀 Starting FPS-WSS-R1"
+echo "======================"
 
 # Colors
 GREEN='\033[0;32m'
@@ -40,6 +27,12 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Check if we're in the right directory
+if [ ! -f "package.json" ]; then
+    print_error "package.json not found. Please run this script from the project root."
+    exit 1
+fi
+
 # Install dependencies if needed
 if [ ! -d "node_modules" ]; then
     print_status "Installing root dependencies..."
@@ -57,11 +50,11 @@ npm run build:all
 
 print_success "Build complete!"
 
-# Start with tunnels
-print_status "Starting servers with Cloudflare tunnels..."
-print_status "Frontend & Backend: http://localhost:5642 (same domain/port, Socket.IO on /server)"
-echo ""
-print_warning "Cloudflare tunnel URLs will be displayed below:"
+# Start the production server
+print_status "Starting production server..."
+print_status "Frontend: http://localhost:5642 (served by backend)"
+print_status "Backend: ws://localhost:5642/server (Socket.IO)"
+print_status "Health check: http://localhost:5642/health"
 echo ""
 
-npm run tunnel:prod
+npm run start:prod
