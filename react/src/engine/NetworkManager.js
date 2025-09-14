@@ -7,7 +7,7 @@ export class NetworkManager {
     this.connected = false;
     this.players = new Map();
     this.localPlayerId = null;
-    this.serverUrl = 'http://localhost:3001';
+    this.serverUrl = 'http://localhost:5642';
 
     this.pendingMoves = [];
     this.lastSentPosition = { x: 0, y: 0, angle: 0 };
